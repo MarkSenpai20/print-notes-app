@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NoteCards</title>
+    
+    <!-- Tailwind CSS with Dark Mode -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#1e293b', 900: '#0f172a', 950: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100dvh; 
+            overflow: hidden; 
+            touch-action: pan-y; /* Allow vertical scroll, block horizontal swipe nav */
+        }
+
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        .mobile-nav { height: calc(3.5rem + env(safe-area-inset-bottom)); }
+
+        @media print {
+            body * { visibility: hidden; }
+            #preview-container, #preview-container * { visibility: visible; }
+            #preview-container {
+                position: absolute; left: 0; top: 0; width: 100%;
+                background: white; transform: none !important;
+            }
+            .page { margin: 0 !important; box-shadow: none !important; page-break-after: always; }
+        }
+
+        .custom-scroll { -webkit-overflow-scrolling: touch; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark .custom-scroll::-webkit-scrollbar-thumb { background: #475569; }
+
+        .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .cut-line { border: 1px dashed #cbd5e1; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen text-slate-800 bg-slate-100 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200">
+
+    <!-- Mobile Header -->
+    <header class="md:hidden h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 shrink-0 z-30 shadow-sm relative">
+        <button onclick="toggleSidebar()" class="p-2 -ml-2 text-slate-600 dark:text-slate-300 rounded-md">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+        <h1 class="font-bold text-lg text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+            <i data-lucide="printer" class="w-5 h-5"></i> NoteCards
+        </h1>
+        <button onclick="exportPDF()" id="mobileExportBtn" class="p-2 -mr-2 text-indigo-600 dark:text-indigo-400 rounded-md">
+            <i data-lucide="download" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-50 transform -translate-x-full md:relative md:translate-x-0 md:w-64 sidebar-transition shadow-2xl md:shadow-none">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+            <div>
+                <h1 class="font-bold text-xl text-indigo-600 dark:text-indigo-400 flex items-center gap-2">NoteCards</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Flashcard Maker</p>
+            </div>
+            <button onclick="toggleSidebar()" class="md:hidden p-1 text-slate-400">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div class="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex gap-2">
+                <input type="text" id="newLessonInput" placeholder="New Lesson..." 
+                    class="w-full text-sm px-3 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button onclick="addLesson()" class="bg-indigo-600 text-white p-2 rounded-md hover:bg-indigo-700 shrink-0">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-2 space-y-1 custom-scroll" id="lessonList"></div>
+        
+        <div class="p-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400">
+            <span>v3.3 AutoScroll</span>
+            <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-yellow-400"></i>
+                <i data-lucide="moon" class="w-4 h-4 block dark:hidden text-slate-600"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative w-full h-full">
+        
+        <!-- Mobile Bottom Nav -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around items-start z-30 px-2 mobile-nav safe-bottom pt-1 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <button onclick="switchTab('editor')" id="tabEditor" class="flex flex-col items-center justify-center w-1/2 h-10 gap-1 text-indigo-600 dark:text-indigo-400 active:scale-95 transition-transform">
+                <i data-lucide="edit-3" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium uppercase tracking-wide">Editor</span>
+            </button>
+            <button onclick="switchTab('preview')" id="tabPreview" class="flex flex-col items-center justify-center w-1/2 h-10 gap-1 text-slate-400 dark:text-slate-500 active:scale-95 transition-transform">
+                <i data-lucide="eye" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium uppercase tracking-wide">Preview</span>
+            </button>
+        </div>
+
+        <!-- Editor Panel -->
+        <section id="editorPanel" class="flex-1 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 w-full h-full pb-20 md:pb-0 transition-colors">
+            <header class="hidden md:flex h-16 border-b border-slate-100 dark:border-slate-800 items-center justify-between px-6 bg-white dark:bg-slate-900 shrink-0">
+                <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                    <span class="font-medium text-sm">Editor</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="saveStatus" class="text-xs text-slate-400 italic">Saved</span>
+                    <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 mr-2">
+                         <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-yellow-400"></i>
+                         <i data-lucide="moon" class="w-4 h-4 block dark:hidden text-slate-400"></i>
+                    </button>
+                    <button onclick="deleteCurrentLesson()" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-full"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                </div>
+            </header>
+            
+            <div class="md:hidden flex justify-between items-center px-4 py-2 bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800">
+                <span id="saveStatusMobile" class="text-xs text-slate-400 italic">Saved</span>
+                <button onclick="deleteCurrentLesson()" class="text-red-500 text-xs flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> Delete</button>
+            </div>
+
+            <div class="flex-1 p-4 md:p-6 overflow-y-auto custom-scroll flex flex-col gap-4">
+                <div class="bg-white dark:bg-slate-850 rounded-xl">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Settings</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-slate-600 dark:text-slate-300 mb-1 block">Paper</label>
+                            <select id="paperSize" onchange="debouncedGenerate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm rounded-lg p-2">
+                                <option value="a4">A4</option>
+                                <option value="legal">Legal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-600 dark:text-slate-300 mb-1 block">Font Size</label>
+                            <select id="fontSize" onchange="debouncedGenerate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm rounded-lg p-2">
+                                <option value="8pt">Small (8pt)</option>
+                                <option value="10pt" selected>Medium (10pt)</option>
+                                <option value="12pt">Large (12pt)</option>
+                                <option value="14pt">XL (14pt)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex flex-col min-h-[300px]">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Content</label>
+                    <textarea id="content" class="flex-1 w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-lg text-sm leading-relaxed resize-none focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Paste your notes here..." oninput="handleInput()"></textarea>
+                    <div class="text-right mt-2 text-xs text-slate-400"><span id="wordCount">0</span> words</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Preview Panel -->
+        <section id="previewPanel" class="hidden md:flex flex-1 bg-slate-100 dark:bg-slate-950 flex-col relative w-full h-full pb-20 md:pb-0 transition-colors">
+            
+            <div class="flex h-14 md:h-16 border-b border-slate-200 dark:border-slate-800 items-center justify-between px-4 bg-white dark:bg-slate-900 shrink-0 z-20 shadow-sm">
+                <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
+                    <span class="font-medium text-sm">Preview</span>
+                </div>
+                <button onclick="exportPDF()" id="exportBtn" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 md:py-2 rounded-md text-sm font-medium transition-all shadow-md active:scale-95">
+                    <i data-lucide="download" class="w-4 h-4"></i><span class="hidden md:inline">Download PDF</span>
+                </button>
+            </div>
+            
+            <!-- SCROLL CONTAINER -->
+            <div id="scrollContainer" class="flex-1 w-full overflow-y-auto overflow-x-hidden custom-scroll bg-slate-200/50 dark:bg-black/20 touch-pan-y" style="-webkit-overflow-scrolling: touch;">
+                <div class="min-h-full w-full p-4 md:p-8 pb-32 flex flex-col items-center">
+                    
+                    <!-- WRAPPER: Transforms happen here -->
+                    <!-- 'origin-top' ensures it scales from top down -->
+                    <div id="preview-wrapper" class="origin-top transition-transform duration-200 ease-out">
+                        <!-- CONTAINER: Holds the actual pages -->
+                        <div id="preview-container" class="flex flex-col gap-8 items-center bg-transparent">
+                            <!-- Pages injected here -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Hidden Measurer -->
+    <div id="measurer"></div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- Theme ---
+        function initTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else { document.documentElement.classList.remove('dark'); }
+        }
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            lucide.createIcons();
+        }
+
+        // --- State ---
+        let currentLessonId = null;
+        let lessons = JSON.parse(localStorage.getItem('lessons_v2')) || {};
+        let generateTimeout;
+        let isMobile = window.innerWidth < 768;
+        let lastWidth = window.innerWidth;
+
+        // --- DOM ---
+        const els = {
+            lessonList: document.getElementById('lessonList'),
+            newLessonInput: document.getElementById('newLessonInput'),
+            content: document.getElementById('content'),
+            paperSize: document.getElementById('paperSize'),
+            fontSize: document.getElementById('fontSize'),
+            preview: document.getElementById('preview-container'),
+            previewWrapper: document.getElementById('preview-wrapper'),
+            previewPanel: document.getElementById('previewPanel'), // The main panel
+            editorPanel: document.getElementById('editorPanel'),
+            sidebar: document.getElementById('sidebar'),
+            sidebarOverlay: document.getElementById('sidebarOverlay'),
+            tabEditor: document.getElementById('tabEditor'),
+            tabPreview: document.getElementById('tabPreview'),
+            saveStatus: document.getElementById('saveStatus'),
+            saveStatusMobile: document.getElementById('saveStatusMobile'),
+            wordCount: document.getElementById('wordCount'),
+            measurer: document.getElementById('measurer')
+        };
+
+        // --- Init ---
+        if (Object.keys(lessons).length === 0) {
+            const id = 'lesson_' + Date.now();
+            lessons[id] = { title: 'First Lesson', content: 'Welcome Mark!\n\nThis updated version fixes scrolling.\n\nType here, then check the Preview tab. It will automatically fit your screen and let you scroll down.', date: Date.now() };
+            currentLessonId = id;
+            saveData();
+        } else { currentLessonId = Object.keys(lessons)[0]; }
+
+        function init() {
+            initTheme();
+            renderLessonList();
+            loadLesson(currentLessonId);
+            window.addEventListener('resize', handleResize);
+            // Run initial resize to set scale
+            requestAnimationFrame(() => handleResize());
+        }
+
+        // --- Core Auto-Scaling Logic ---
+        function handleResize() {
+            const newWidth = window.innerWidth;
+            if (newWidth !== lastWidth) {
+                isMobile = newWidth < 768;
+                lastWidth = newWidth;
+                if (!isMobile) {
+                    els.editorPanel.classList.remove('hidden');
+                    els.previewPanel.classList.remove('hidden');
+                    els.sidebarOverlay.classList.add('hidden');
+                    els.sidebar.classList.remove('-translate-x-full');
+                } else {
+                    els.sidebar.classList.add('-translate-x-full');
+                    switchTab(activeTab);
+                }
+            }
+            
+            // --- SCROLL FIX START ---
+            // Calculate scale based on container width
+            const containerWidth = els.previewPanel.clientWidth;
+            // 794px is approx A4 width at 96 DPI
+            const contentWidth = 794; 
+            
+            // Default: No scale
+            let scale = 1;
+            
+            // If screen is smaller than A4 page (+ margins)
+            if (containerWidth < contentWidth + 40) {
+                scale = (containerWidth - 30) / contentWidth;
+            }
+
+            // Apply Scale
+            els.previewWrapper.style.transform = `scale(${scale})`;
+            
+            // FIX: Explicitly set height of wrapper
+            // When scaling with transform, the element takes up original DOM space.
+            // We must force the wrapper's height to match the VISUAL scaled height
+            // so the parent scroll container knows when to stop scrolling.
+            const rawHeight = els.preview.scrollHeight; // Height of inner pages
+            if(rawHeight > 0) {
+                const scaledHeight = rawHeight * scale;
+                els.previewWrapper.style.height = `${scaledHeight}px`;
+                
+                // Also fix width margins to center it
+                const rawWidth = contentWidth; // 210mm approx
+                const scaledWidth = rawWidth * scale;
+                // If container is flex-col items-center, we usually don't need margin hacks,
+                // but setting width explicitly helps
+                els.previewWrapper.style.width = `${contentWidth}px`; 
+            }
+            // --- SCROLL FIX END ---
+        }
+
+        // --- Navigation ---
+        let activeTab = 'editor';
+        function switchTab(tab) {
+            activeTab = tab;
+            if (!isMobile) return;
+
+            if (tab === 'editor') {
+                els.editorPanel.classList.remove('hidden');
+                els.previewPanel.classList.add('hidden');
+                els.tabEditor.classList.add('text-indigo-600', 'dark:text-indigo-400');
+                els.tabEditor.classList.remove('text-slate-400', 'dark:text-slate-500');
+                els.tabPreview.classList.add('text-slate-400', 'dark:text-slate-500');
+                els.tabPreview.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+            } else {
+                els.editorPanel.classList.add('hidden');
+                els.previewPanel.classList.remove('hidden');
+                els.tabPreview.classList.add('text-indigo-600', 'dark:text-indigo-400');
+                els.tabPreview.classList.remove('text-slate-400', 'dark:text-slate-500');
+                els.tabEditor.classList.add('text-slate-400', 'dark:text-slate-500');
+                els.tabEditor.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+                
+                requestAnimationFrame(() => handleResize()); 
+            }
+        }
+
+        function toggleSidebar() {
+            const isClosed = els.sidebar.classList.contains('-translate-x-full');
+            if (isClosed) {
+                els.sidebar.classList.remove('-translate-x-full');
+                els.sidebarOverlay.classList.remove('hidden');
+            } else {
+                els.sidebar.classList.add('-translate-x-full');
+                els.sidebarOverlay.classList.add('hidden');
+            }
+        }
+
+        // --- Data ---
+        function saveData() {
+            localStorage.setItem('lessons_v2', JSON.stringify(lessons));
+            if(els.saveStatus) updateSaveStatus('Saved', 'text-slate-400');
+        }
+
+        function updateSaveStatus(text, colorClass) {
+            [els.saveStatus, els.saveStatusMobile].forEach(el => {
+                if(el) { el.innerText = text; el.className = `text-xs italic ${colorClass}`; }
+            });
+        }
+
+        function handleInput() {
+            if (!currentLessonId) return;
+            lessons[currentLessonId].content = els.content.value;
+            updateSaveStatus('Saving...', 'text-indigo-500');
+            updateWordCount();
+            saveData();
+            debouncedGenerate();
+        }
+
+        function updateWordCount() {
+            const text = els.content.value || '';
+            const count = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            els.wordCount.innerText = count;
+        }
+
+        function addLesson() {
+            const name = els.newLessonInput.value.trim();
+            if (!name) return;
+            const id = 'lesson_' + Date.now();
+            lessons[id] = { title: name, content: '', date: Date.now() };
+            currentLessonId = id;
+            els.newLessonInput.value = '';
+            saveData();
+            renderLessonList();
+            loadLesson(id);
+            if(isMobile) toggleSidebar(); 
+        }
+
+        function deleteCurrentLesson() {
+            if(Object.keys(lessons).length <= 1) return alert("You need at least one lesson.");
+            if(confirm('Delete this lesson?')) {
+                delete lessons[currentLessonId];
+                currentLessonId = Object.keys(lessons)[0];
+                saveData();
+                renderLessonList();
+                loadLesson(currentLessonId);
+            }
+        }
+
+        function renderLessonList() {
+            els.lessonList.innerHTML = '';
+            const sortedIds = Object.keys(lessons).sort((a,b) => lessons[b].date - lessons[a].date);
+            sortedIds.forEach(id => {
+                const l = lessons[id];
+                const isActive = id === currentLessonId;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left p-3 rounded-md text-sm mb-1 flex items-center gap-3 transition-colors ${isActive ? 'bg-indigo-50 dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 font-medium border border-indigo-100 dark:border-slate-700' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`;
+                btn.onclick = () => { loadLesson(id); if(isMobile) toggleSidebar(); };
+                btn.innerHTML = `<i data-lucide="file-text" class="w-4 h-4 ${isActive ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400'}"></i><span class="truncate">${l.title}</span>`;
+                els.lessonList.appendChild(btn);
+            });
+            lucide.createIcons();
+        }
+
+        function loadLesson(id) {
+            currentLessonId = id;
+            els.content.value = lessons[id].content || '';
+            renderLessonList();
+            updateWordCount();
+            generatePreview();
+        }
+
+        function debouncedGenerate() {
+            clearTimeout(generateTimeout);
+            generateTimeout = setTimeout(generatePreview, 500);
+        }
+
+        // --- Generation ---
+        function generatePreview() {
+            const content = els.content.value;
+            const paperType = els.paperSize.value;
+            const fontSz = els.fontSize.value;
+            
+            const config = paperType === 'a4' ? { width: 210, height: 297 } : { width: 215.9, height: 355.6 };
+            const noteSize = 50, gap = 2, margin = 10;
+            const padding = 5; 
+            
+            const usableWidth = config.width - (margin * 2);
+            const usableHeight = config.height - (margin * 2);
+            const notesPerRow = Math.floor(usableWidth / (noteSize + gap));
+            const notesPerCol = Math.floor(usableHeight / (noteSize + gap));
+            
+            let words = content.split(/\s+/).filter(w => w.trim());
+            let notes = [], currentNote = '';
+
+            const m = els.measurer;
+            Object.assign(m.style, {
+                position: 'absolute', visibility: 'hidden', 
+                width: `${noteSize - (padding * 2)}mm`, height: `${noteSize - (padding * 2)}mm`,
+                padding: '0', fontSize: fontSz, fontFamily: 'Inter, sans-serif',
+                lineHeight: '1.3', whiteSpace: 'pre-wrap', wordWrap: 'break-word'
+            });
+
+            for (let word of words) {
+                let test = (currentNote + ' ' + word).trim();
+                m.innerText = test;
+                if (m.scrollHeight > m.clientHeight || m.scrollWidth > m.clientWidth) {
+                    if (currentNote.trim()) notes.push(currentNote.trim());
+                    currentNote = word;
+                    m.innerText = currentNote; 
+                } else { currentNote = test; }
+            }
+            if (currentNote.trim()) notes.push(currentNote.trim());
+
+            const totalNotes = notes.length;
+            const notesPerPage = notesPerRow * notesPerCol;
+            const pagesNeeded = Math.ceil(totalNotes / notesPerPage);
+            
+            els.preview.innerHTML = '';
+            if (totalNotes === 0) {
+                 els.preview.innerHTML = `<div class="text-slate-400 mt-20 text-center flex flex-col items-center"><i data-lucide="layout" class="w-12 h-12 mb-2 opacity-50"></i><p>Type to generate cards</p></div>`;
+                 lucide.createIcons();
+                 requestAnimationFrame(() => handleResize());
+                 return;
+            }
+
+            for (let p = 0; p < pagesNeeded; p++) {
+                let page = document.createElement('div');
+                page.className = 'page relative bg-white mx-auto mb-8 shadow-md text-black';
+                page.style.width = `${config.width}mm`;
+                page.style.height = `${config.height}mm`;
+                
+                let watermark = document.createElement('div');
+                watermark.className = 'absolute bottom-2 right-4 text-xs text-slate-300 pointer-events-none';
+                watermark.innerText = `Page ${p + 1} / ${pagesNeeded}`;
+                page.appendChild(watermark);
+
+                let start = p * notesPerPage;
+                for (let i = 0; i < notesPerPage; i++) {
+                    let idx = start + i;
+                    if (idx >= totalNotes) break;
+
+                    let row = Math.floor(i / notesPerRow);
+                    let col = i % notesPerRow;
+                    let note = document.createElement('div');
+                    note.className = 'cut-line absolute flex items-start overflow-hidden';
+                    
+                    const gridWidth = notesPerRow * (noteSize + gap) - gap;
+                    const gridHeight = notesPerCol * (noteSize + gap) - gap;
+                    const startX = (config.width - gridWidth) / 2;
+                    const startY = (config.height - gridHeight) / 2;
+
+                    note.style.left = `${startX + col * (noteSize + gap)}mm`;
+                    note.style.top = `${startY + row * (noteSize + gap)}mm`;
+                    note.style.width = `${noteSize}mm`;
+                    note.style.height = `${noteSize}mm`;
+                    note.style.padding = `${padding}mm`;
+                    note.style.fontSize = fontSz;
+                    note.style.lineHeight = '1.3';
+                    note.style.fontFamily = 'Inter, sans-serif';
+                    note.innerText = notes[idx];
+                    page.appendChild(note);
+                }
+                els.preview.appendChild(page);
+            }
+            
+            requestAnimationFrame(() => handleResize());
+        }
+
+        async function exportPDF() {
+            const btn = isMobile ? document.getElementById('mobileExportBtn') : document.getElementById('exportBtn');
+            const originalContent = btn.innerHTML;
+            
+            const wasHidden = els.previewPanel.classList.contains('hidden');
+            if (wasHidden) {
+                els.previewPanel.classList.remove('hidden');
+                els.previewPanel.style.position = 'absolute';
+                els.previewPanel.style.top = '0';
+                els.previewPanel.style.zIndex = '-10'; 
+                els.previewPanel.style.opacity = '1';
+            }
+
+            // Reset transform for clean capture
+            const originalTransform = els.previewWrapper.style.transform;
+            const originalHeight = els.previewWrapper.style.height;
+            els.previewWrapper.style.transform = 'none';
+            els.previewWrapper.style.height = 'auto';
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = isMobile ? `<i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>` : `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Generating...`;
+                lucide.createIcons();
+
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const { jsPDF } = window.jspdf;
+                let paper = els.paperSize.value;
+                let format = paper === 'a4' ? 'a4' : [215.9, 355.6];
+                let pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: format });
+                let pages = document.getElementsByClassName('page');
+                
+                for (let i = 0; i < pages.length; i++) {
+                    if (i > 0) pdf.addPage();
+                    let canvas = await html2canvas(pages[i], {
+                        scale: 2, 
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff'
+                    });
+                    pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
+                }
+                
+                const title = lessons[currentLessonId].title || 'notes';
+                pdf.save(`${title.replace(/\s+/g, '_')}.pdf`);
+
+            } catch (err) {
+                console.error(err);
+                alert("Error generating PDF. Please try again.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+                
+                // Restore layout
+                els.previewWrapper.style.transform = originalTransform;
+                els.previewWrapper.style.height = originalHeight;
+                
+                if (wasHidden) {
+                    els.previewPanel.classList.add('hidden');
+                    els.previewPanel.style.position = '';
+                    els.previewPanel.style.top = '';
+                    els.previewPanel.style.zIndex = '';
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
+
