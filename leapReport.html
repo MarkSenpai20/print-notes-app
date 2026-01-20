@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEAPP Reflection Report Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: #ecf0f1;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        
+        .editor-section, .preview-section, .commands-section {
+            padding: 20px;
+        }
+        
+        .editor-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .preview-section {
+            flex: 1;
+            min-width: 300px;
+            border-left: 1px solid #eee;
+        }
+        
+        .commands-section {
+            width: 100%;
+            background-color: #f9f9f9;
+            border-top: 1px solid #eee;
+            margin-top: 20px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+            font-size: 1.5rem;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin: 15px 0 10px 0;
+            font-size: 1.2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .word-count {
+            text-align: right;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .total-words {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .requirements-note {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+            font-size: 0.95rem;
+        }
+        
+        .preview-container {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            min-height: 600px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            text-align: justify;
+            line-height: 1.5;
+        }
+        
+        .preview-container h1, 
+        .preview-container h2, 
+        .preview-container h3, 
+        .preview-container h4, 
+        .preview-container h5, 
+        .preview-container h6 {
+            font-family: 'Times New Roman', Times, serif;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .preview-container ol, 
+        .preview-container ul {
+            padding-left: 30px;
+            margin: 10px 0;
+        }
+        
+        .preview-container li {
+            margin-bottom: 5px;
+        }
+        
+        .preview-container .tab {
+            margin-left: 40px;
+        }
+        
+        .preview-container strong {
+            font-weight: bold;
+        }
+        
+        .preview-container em {
+            font-style: italic;
+        }
+        
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .command-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .command-syntax {
+            font-family: monospace;
+            background-color: #f1f1f1;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin: 8px 0;
+            display: inline-block;
+            border-left: 3px solid #3498db;
+        }
+        
+        .command-example {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 5px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #clearBtn {
+            background-color: #e74c3c;
+        }
+        
+        #clearBtn:hover {
+            background-color: #c0392b;
+        }
+        
+        #exportBtn {
+            background-color: #27ae60;
+        }
+        
+        #exportBtn:hover {
+            background-color: #219653;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .preview-section {
+                border-left: none;
+                border-top: 1px solid #eee;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LEAPP Reflection Report Builder</h1>
+            <p class="subtitle">Create your weekly LEAPP reflection reports following the required format: Learning, Equivalence & Awareness, Practice, and Personal Insight</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="editor-section">
+                <h2>Report Editor</h2>
+                
+                <div class="requirements-note">
+                    <p><strong>Format Requirements:</strong> 300-400 words total, Times New Roman font, size 12, justified alignment. Submit as PDF.</p>
+                    <p><strong>Academic Integrity:</strong> Plagiarism and unacknowledged AI-generated content are strictly prohibited.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="learning">1. LEARNING</label>
+                    <textarea id="learning" placeholder="Explain what concepts, tools, or skills you learned this week in your own words..."></textarea>
+                    <div class="word-count">Words: <span id="learningCount">0</span></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="equivalence">2. EQUIVALENCE & AWARENESS</label>
+                    <textarea id="equivalence" placeholder="Connect the lesson to real-life situations, technology trends, or previous lessons..."></textarea>
+                    <div class="word-count">Words: <span id="equivalenceCount">0</span></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="practice">3. PRACTICE</label>
+                    <textarea id="practice" placeholder="Explain how the lesson can be applied in programming, system development, problem-solving, or future IT work..."></textarea>
+                    <div class="word-count">Words: <span id="practiceCount">0</span></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="insight">4. PERSONAL INSIGHT</label>
+                    <textarea id="insight" placeholder="Reflect on what you found challenging or confusing and what you learned about yourself as a student..."></textarea>
+                    <div class="word-count">Words: <span id="insightCount">0</span></div>
+                </div>
+                
+                <div class="total-words">
+                    <p>Total Words: <span id="totalWordCount">0</span> / 300-400 required</p>
+                </div>
+                
+                <div class="button-group">
+                    <button id="previewBtn">Update Preview</button>
+                    <button id="clearBtn">Clear All</button>
+                    <button id="exportBtn">Export as PDF</button>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h2>Live Preview</h2>
+                <div class="preview-container" id="preview">
+                    <p style="color: #999; text-align: center; margin-top: 50px;">Your formatted report will appear here</p>
+                </div>
+            </div>
+            
+            <div class="commands-section">
+                <h2>Formatting Commands</h2>
+                <p>Use these commands in your text to format your report. They will be converted to proper formatting in the preview and exported document.</p>
+                
+                <div class="commands-grid">
+                    <div class="command-item">
+                        <h3>Headers</h3>
+                        <div class="command-syntax">[H1]Your Header Text</div>
+                        <div class="command-example">Creates a main header (h1)</div>
+                        
+                        <div class="command-syntax">[H2]Sub Header</div>
+                        <div class="command-example">Creates a sub header (h2)</div>
+                        
+                        <div class="command-syntax">[H3]... [H4]... [H5]... [H6]...</div>
+                        <div class="command-example">Creates headers of different levels</div>
+                    </div>
+                    
+                    <div class="command-item">
+                        <h3>Text Formatting</h3>
+                        <div class="command-syntax">[BOLD]Your Text[/BOLD]</div>
+                        <div class="command-example">Makes text <strong>bold</strong></div>
+                        
+                        <div class="command-syntax">[ITALIC]Your Text[/ITALIC]</div>
+                        <div class="command-example">Makes text <em>italic</em></div>
+                        
+                        <div class="command-syntax">[TAB]Your indented text</div>
+                        <div class="command-example">Indents the text that follows</div>
+                    </div>
+                    
+                    <div class="command-item">
+                        <h3>Lists</h3>
+                        <div class="command-syntax">[OLIST]"Item 1", "Item 2", "Item 3"</div>
+                        <div class="command-example">Creates a numbered list</div>
+                        
+                        <div class="command-syntax">[UNLISTED]"Item A", "Item B", "Item C"</div>
+                        <div class="command-example">Creates a bulleted list</div>
+                        
+                        <div class="command-syntax">[OLIST]"1. First", "- Second", "• Third"</div>
+                        <div class="command-example">Supports different bullet formats</div>
+                    </div>
+                    
+                    <div class="command-item">
+                        <h3>Special Formatting</h3>
+                        <div class="command-syntax">[NEWLINE]</div>
+                        <div class="command-example">Adds a line break</div>
+                        
+                        <div class="command-syntax">[HR]</div>
+                        <div class="command-example">Adds a horizontal line</div>
+                        
+                        <div class="command-syntax">[QUOTE]Your quote here[/QUOTE]</div>
+                        <div class="command-example">Formats text as a blockquote</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>LEAPP Reflection Report Builder | Based on Classroom Requirements | Total word count must be between 300-400 words</p>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const learningTextarea = document.getElementById('learning');
+        const equivalenceTextarea = document.getElementById('equivalence');
+        const practiceTextarea = document.getElementById('practice');
+        const insightTextarea = document.getElementById('insight');
+        const previewDiv = document.getElementById('preview');
+        const previewBtn = document.getElementById('previewBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        
+        // Word count elements
+        const learningCount = document.getElementById('learningCount');
+        const equivalenceCount = document.getElementById('equivalenceCount');
+        const practiceCount = document.getElementById('practiceCount');
+        const insightCount = document.getElementById('insightCount');
+        const totalWordCount = document.getElementById('totalWordCount');
+        
+        // Function to count words in a string
+        function countWords(text) {
+            if (!text.trim()) return 0;
+            return text.trim().split(/\s+/).length;
+        }
+        
+        // Function to update word counts
+        function updateWordCounts() {
+            const learningWords = countWords(learningTextarea.value);
+            const equivalenceWords = countWords(equivalenceTextarea.value);
+            const practiceWords = countWords(practiceTextarea.value);
+            const insightWords = countWords(insightTextarea.value);
+            const totalWords = learningWords + equivalenceWords + practiceWords + insightWords;
+            
+            learningCount.textContent = learningWords;
+            equivalenceCount.textContent = equivalenceWords;
+            practiceCount.textContent = practiceWords;
+            insightCount.textContent = insightWords;
+            totalWordCount.textContent = totalWords;
+            
+            // Highlight if word count is not in range
+            if (totalWords < 300 || totalWords > 400) {
+                totalWordCount.style.color = '#e74c3c';
+            } else {
+                totalWordCount.style.color = '#27ae60';
+            }
+        }
+        
+        // Function to parse and convert commands to HTML
+        function parseCommands(text) {
+            if (!text) return '';
+            
+            let result = text;
+            
+            // Replace headers
+            result = result.replace(/\[H1\](.*?)(?=\[|$)/g, '<h1>$1</h1>');
+            result = result.replace(/\[H2\](.*?)(?=\[|$)/g, '<h2>$1</h2>');
+            result = result.replace(/\[H3\](.*?)(?=\[|$)/g, '<h3>$1</h3>');
+            result = result.replace(/\[H4\](.*?)(?=\[|$)/g, '<h4>$1</h4>');
+            result = result.replace(/\[H5\](.*?)(?=\[|$)/g, '<h5>$1</h5>');
+            result = result.replace(/\[H6\](.*?)(?=\[|$)/g, '<h6>$1</h6>');
+            
+            // Replace bold and italic
+            result = result.replace(/\[BOLD\](.*?)\[\/BOLD\]/g, '<strong>$1</strong>');
+            result = result.replace(/\[ITALIC\](.*?)\[\/ITALIC\]/g, '<em>$1</em>');
+            
+            // Replace tab
+            result = result.replace(/\[TAB\](.*?)(?=\[|$)/g, '<div class="tab">$1</div>');
+            
+            // Replace ordered lists
+            result = result.replace(/\[OLIST\]"(.*?)"/g, function(match, listItems) {
+                const items = listItems.split('", "');
+                let listHTML = '<ol>';
+                items.forEach(item => {
+                    // Clean up item formatting
+                    let cleanItem = item.replace(/^[0-9•\-\.\s]+/, '').trim();
+                    if (cleanItem === '') cleanItem = item.trim();
+                    listHTML += `<li>${cleanItem}</li>`;
+                });
+                listHTML += '</ol>';
+                return listHTML;
+            });
+            
+            // Replace unordered lists
+            result = result.replace(/\[UNLISTED\]"(.*?)"/g, function(match, listItems) {
+                const items = listItems.split('", "');
+                let listHTML = '<ul>';
+                items.forEach(item => {
+                    // Clean up item formatting
+                    let cleanItem = item.replace(/^[0-9•\-\.\s]+/, '').trim();
+                    if (cleanItem === '') cleanItem = item.trim();
+                    listHTML += `<li>${cleanItem}</li>`;
+                });
+                listHTML += '</ul>';
+                return listHTML;
+            });
+            
+            // Replace newline
+            result = result.replace(/\[NEWLINE\]/g, '<br>');
+            
+            // Replace horizontal rule
+            result = result.replace(/\[HR\]/g, '<hr>');
+            
+            // Replace quote
+            result = result.replace(/\[QUOTE\](.*?)\[\/QUOTE\]/g, '<blockquote>$1</blockquote>');
+            
+            // Replace line breaks for HTML
+            result = result.replace(/\n/g, '<br>');
+            
+            return result;
+        }
+        
+        // Function to generate preview
+        function generatePreview() {
+            const learningContent = parseCommands(learningTextarea.value);
+            const equivalenceContent = parseCommands(equivalenceTextarea.value);
+            const practiceContent = parseCommands(practiceTextarea.value);
+            const insightContent = parseCommands(insightTextarea.value);
+            
+            // Calculate total words
+            const totalWords = countWords(learningTextarea.value) + 
+                               countWords(equivalenceTextarea.value) + 
+                               countWords(practiceTextarea.value) + 
+                               countWords(insightTextarea.value);
+            
+            // Build preview HTML
+            let previewHTML = `
+                <div style="margin-bottom: 30px;">
+                    <h1 style="text-align: center; color: #2c3e50;">LEAPP Reflection Report</h1>
+                    <p style="text-align: center; color: #7f8c8d; margin-bottom: 20px;">Weekly Reflection | Total Words: ${totalWords}</p>
+                    <hr>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <h2>1. LEARNING</h2>
+                    <div>${learningContent || '<p><em>No content entered for this section.</em></p>'}</div>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <h2>2. EQUIVALENCE & AWARENESS</h2>
+                    <div>${equivalenceContent || '<p><em>No content entered for this section.</em></p>'}</div>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <h2>3. PRACTICE</h2>
+                    <div>${practiceContent || '<p><em>No content entered for this section.</em></p>'}</div>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <h2>4. PERSONAL INSIGHT</h2>
+                    <div>${insightContent || '<p><em>No content entered for this section.</em></p>'}</div>
+                </div>
+            `;
+            
+            // Add word count status
+            if (totalWords < 300) {
+                previewHTML += `<p style="color: #e74c3c; font-weight: bold;">Note: Your report has ${totalWords} words, but needs to be at least 300 words.</p>`;
+            } else if (totalWords > 400) {
+                previewHTML += `<p style="color: #e74c3c; font-weight: bold;">Note: Your report has ${totalWords} words, but should not exceed 400 words.</p>`;
+            } else {
+                previewHTML += `<p style="color: #27ae60; font-weight: bold;">Good job! Your report has ${totalWords} words, which is within the required 300-400 word range.</p>`;
+            }
+            
+            previewDiv.innerHTML = previewHTML;
+        }
+        
+        // Function to clear all fields
+        function clearAllFields() {
+            if (confirm('Are you sure you want to clear all sections? This cannot be undone.')) {
+                learningTextarea.value = '';
+                equivalenceTextarea.value = '';
+                practiceTextarea.value = '';
+                insightTextarea.value = '';
+                
+                updateWordCounts();
+                generatePreview();
+            }
+        }
+        
+        // Function to export as PDF (simulated)
+        function exportAsPDF() {
+            const totalWords = countWords(learningTextarea.value) + 
+                               countWords(equivalenceTextarea.value) + 
+                               countWords(practiceTextarea.value) + 
+                               countWords(insightTextarea.value);
+            
+            if (totalWords === 0) {
+                alert('Cannot export an empty report. Please add content to at least one section.');
+                return;
+            }
+            
+            if (totalWords < 300) {
+                if (!confirm(`Your report has only ${totalWords} words, but 300 words are required. Do you still want to export?`)) {
+                    return;
+                }
+            } else if (totalWords > 400) {
+                if (!confirm(`Your report has ${totalWords} words, which exceeds the 400 word limit. Do you still want to export?`)) {
+                    return;
+                }
+            }
+            
+            alert('PDF export functionality would normally generate a downloadable PDF file.\n\nFor now, you can:\n1. Copy the preview content\n2. Paste into a word processor\n3. Format with Times New Roman, size 12, justified alignment\n4. Save as PDF\n\nIn a full implementation, this would use a PDF generation library like jsPDF or html2pdf.');
+        }
+        
+        // Add event listeners
+        previewBtn.addEventListener('click', generatePreview);
+        clearBtn.addEventListener('click', clearAllFields);
+        exportBtn.addEventListener('click', exportAsPDF);
+        
+        // Update word counts as user types
+        learningTextarea.addEventListener('input', updateWordCounts);
+        equivalenceTextarea.addEventListener('input', updateWordCounts);
+        practiceTextarea.addEventListener('input', updateWordCounts);
+        insightTextarea.addEventListener('input', updateWordCounts);
+        
+        // Initialize with example content
+        function initializeExample() {
+            learningTextarea.value = `[H1]What I Learned This Week[H1]
+This week, I learned about database normalization and its importance in reducing data redundancy. The process involves organizing data in a database to minimize duplication and ensure data integrity. 
+
+[TAB]I also explored different normal forms (1NF, 2NF, 3NF) and understood how each form addresses specific types of data anomalies.`;
+
+            equivalenceTextarea.value = `[H2]Real-World Applications[H2]
+Database normalization is widely used in enterprise systems. For example, e-commerce platforms use normalized databases to manage customer orders, product inventory, and user profiles efficiently.
+
+[OLIST]"Large-scale systems like banking", "Social media platforms", "Inventory management systems"`;
+
+            practiceTextarea.value = `[H2]Practical Application[H2]
+In my upcoming project, I can apply normalization principles when designing the database schema. This will help ensure that:
+
+[UNLISTED]"Data is consistent across tables", "Updates are easier to manage", "The database performs efficiently"
+
+[BOLD]By properly normalizing[/BOLD], I can create a more robust and maintainable system.`;
+
+            insightTextarea.value = `[H2]Personal Reflection[H2]
+I found the concept of third normal form (3NF) challenging at first because it requires careful analysis of functional dependencies. However, after working through examples, I realized it's about eliminating transitive dependencies.
+
+[NEWLINE]
+This week taught me that I learn best through practical examples rather than just theoretical explanations. I need to spend more time creating sample databases to reinforce these concepts.`;
+            
+            updateWordCounts();
+            generatePreview();
+        }
+        
+        // Initialize with example content
+        initializeExample();
+    </script>
+</body>
+</html>
