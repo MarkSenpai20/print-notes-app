@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEAPP Reflection Report Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -125,8 +127,12 @@
         }
         
         .total-words {
+            text-align: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin: 15px 0;
             font-weight: bold;
-            color: #2c3e50;
         }
         
         .requirements-note {
@@ -181,6 +187,20 @@
         
         .preview-container em {
             font-style: italic;
+        }
+        
+        .preview-container blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin: 15px 0;
+            color: #555;
+            font-style: italic;
+        }
+        
+        .preview-container hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 20px 0;
         }
         
         .commands-grid {
@@ -252,12 +272,91 @@
             background-color: #219653;
         }
         
+        #sampleBtn {
+            background-color: #9b59b6;
+        }
+        
+        #sampleBtn:hover {
+            background-color: #8e44ad;
+        }
+        
         .footer {
             text-align: center;
             padding: 20px;
             color: #7f8c8d;
             font-size: 0.9rem;
             border-top: 1px solid #eee;
+        }
+        
+        .status-message {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-close {
+            background-color: #7f8c8d;
+        }
+        
+        .modal-close:hover {
+            background-color: #636e72;
         }
         
         @media (max-width: 768px) {
@@ -269,6 +368,45 @@
                 border-left: none;
                 border-top: 1px solid #eee;
             }
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .word-count-status {
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .good {
+            color: #27ae60;
+        }
+        
+        .low {
+            color: #e74c3c;
+        }
+        
+        .high {
+            color: #f39c12;
         }
     </style>
 </head>
@@ -313,11 +451,19 @@
                 </div>
                 
                 <div class="total-words">
-                    <p>Total Words: <span id="totalWordCount">0</span> / 300-400 required</p>
+                    <p>Total Words: <span id="totalWordCount" class="word-count-status">0</span> / 300-400 required</p>
+                </div>
+                
+                <div class="status-message" id="statusMessage"></div>
+                
+                <div class="loading" id="loadingIndicator">
+                    <div class="loading-spinner"></div>
+                    <p>Generating PDF...</p>
                 </div>
                 
                 <div class="button-group">
                     <button id="previewBtn">Update Preview</button>
+                    <button id="sampleBtn">Load Sample</button>
                     <button id="clearBtn">Clear All</button>
                     <button id="exportBtn">Export as PDF</button>
                 </div>
@@ -357,6 +503,9 @@
                         
                         <div class="command-syntax">[TAB]Your indented text</div>
                         <div class="command-example">Indents the text that follows</div>
+                        
+                        <div class="command-syntax">[NEWLINE]</div>
+                        <div class="command-example">Adds a line break</div>
                     </div>
                     
                     <div class="command-item">
@@ -373,14 +522,14 @@
                     
                     <div class="command-item">
                         <h3>Special Formatting</h3>
-                        <div class="command-syntax">[NEWLINE]</div>
-                        <div class="command-example">Adds a line break</div>
-                        
                         <div class="command-syntax">[HR]</div>
                         <div class="command-example">Adds a horizontal line</div>
                         
                         <div class="command-syntax">[QUOTE]Your quote here[/QUOTE]</div>
                         <div class="command-example">Formats text as a blockquote</div>
+                        
+                        <div class="command-syntax">[LINK]https://example.com[/LINK]</div>
+                        <div class="command-example">Creates a clickable link</div>
                     </div>
                 </div>
             </div>
@@ -390,8 +539,23 @@
             <p>LEAPP Reflection Report Builder | Based on Classroom Requirements | Total word count must be between 300-400 words</p>
         </div>
     </div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <h3>Confirm PDF Export</h3>
+            <p id="modalMessage">Your report is ready for export. Would you like to proceed?</p>
+            <div class="modal-buttons">
+                <button id="modalCancel" class="modal-close">Cancel</button>
+                <button id="modalConfirm">Export PDF</button>
+            </div>
+        </div>
+    </div>
 
     <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        
         // Get DOM elements
         const learningTextarea = document.getElementById('learning');
         const equivalenceTextarea = document.getElementById('equivalence');
@@ -401,6 +565,15 @@
         const previewBtn = document.getElementById('previewBtn');
         const clearBtn = document.getElementById('clearBtn');
         const exportBtn = document.getElementById('exportBtn');
+        const sampleBtn = document.getElementById('sampleBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        
+        // Modal elements
+        const confirmationModal = document.getElementById('confirmationModal');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalConfirm = document.getElementById('modalConfirm');
+        const modalMessage = document.getElementById('modalMessage');
         
         // Word count elements
         const learningCount = document.getElementById('learningCount');
@@ -430,11 +603,30 @@
             totalWordCount.textContent = totalWords;
             
             // Highlight if word count is not in range
-            if (totalWords < 300 || totalWords > 400) {
-                totalWordCount.style.color = '#e74c3c';
+            if (totalWords < 300) {
+                totalWordCount.className = 'word-count-status low';
+                totalWordCount.title = 'Word count is too low (minimum 300 words)';
+            } else if (totalWords > 400) {
+                totalWordCount.className = 'word-count-status high';
+                totalWordCount.title = 'Word count is too high (maximum 400 words)';
             } else {
-                totalWordCount.style.color = '#27ae60';
+                totalWordCount.className = 'word-count-status good';
+                totalWordCount.title = 'Word count is within the required range';
             }
+            
+            return totalWords;
+        }
+        
+        // Function to show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
         }
         
         // Function to parse and convert commands to HTML
@@ -495,6 +687,9 @@
             // Replace quote
             result = result.replace(/\[QUOTE\](.*?)\[\/QUOTE\]/g, '<blockquote>$1</blockquote>');
             
+            // Replace link
+            result = result.replace(/\[LINK\](.*?)\[\/LINK\]/g, '<a href="$1" target="_blank">$1</a>');
+            
             // Replace line breaks for HTML
             result = result.replace(/\n/g, '<br>');
             
@@ -544,10 +739,12 @@
             `;
             
             // Add word count status
-            if (totalWords < 300) {
+            if (totalWords === 0) {
+                previewHTML += `<p style="color: #999; font-style: italic; text-align: center;">Please add content to your report</p>`;
+            } else if (totalWords < 300) {
                 previewHTML += `<p style="color: #e74c3c; font-weight: bold;">Note: Your report has ${totalWords} words, but needs to be at least 300 words.</p>`;
             } else if (totalWords > 400) {
-                previewHTML += `<p style="color: #e74c3c; font-weight: bold;">Note: Your report has ${totalWords} words, but should not exceed 400 words.</p>`;
+                previewHTML += `<p style="color: #f39c12; font-weight: bold;">Note: Your report has ${totalWords} words, but should not exceed 400 words.</p>`;
             } else {
                 previewHTML += `<p style="color: #27ae60; font-weight: bold;">Good job! Your report has ${totalWords} words, which is within the required 300-400 word range.</p>`;
             }
@@ -565,38 +762,227 @@
                 
                 updateWordCounts();
                 generatePreview();
+                showStatus('All fields cleared successfully', 'success');
             }
         }
         
-        // Function to export as PDF (simulated)
-        function exportAsPDF() {
-            const totalWords = countWords(learningTextarea.value) + 
-                               countWords(equivalenceTextarea.value) + 
-                               countWords(practiceTextarea.value) + 
-                               countWords(insightTextarea.value);
+        // Function to load sample content
+        function loadSampleContent() {
+            if (confirm('This will replace your current content with sample data. Continue?')) {
+                learningTextarea.value = `[H1]What I Learned This Week[H1]
+This week, I learned about database normalization and its importance in reducing data redundancy. The process involves organizing data in a database to minimize duplication and ensure data integrity. 
+
+[TAB]I also explored different normal forms (1NF, 2NF, 3NF) and understood how each form addresses specific types of data anomalies. Understanding these concepts is crucial for designing efficient databases that can scale with application needs.
+
+[OLIST]"First Normal Form (1NF): Eliminates duplicate columns", "Second Normal Form (2NF): Removes partial dependencies", "Third Normal Form (3NF): Eliminates transitive dependencies"`;
+
+                equivalenceTextarea.value = `[H2]Real-World Applications[H2]
+Database normalization is widely used in enterprise systems. For example, e-commerce platforms use normalized databases to manage customer orders, product inventory, and user profiles efficiently. This ensures data consistency when thousands of transactions occur simultaneously.
+
+[UNLISTED]"Large-scale systems like banking rely on normalized databases for transaction integrity", "Social media platforms use normalization to manage user relationships and content", "Inventory management systems require normalized data to track stock levels accurately"
+
+[H3]Connection to Previous Lessons[H3]
+This lesson connects directly to our previous discussions on SQL and relational database design. The normalization principles apply directly to the table structures we designed last week, showing how theoretical concepts translate to practical implementation.`;
+
+                practiceTextarea.value = `[H2]Practical Application[H2]
+In my upcoming project, I can apply normalization principles when designing the database schema. This will help ensure that:
+
+[UNLISTED]"Data is consistent across tables", "Updates are easier to manage without affecting unrelated data", "The database performs efficiently even with large datasets"
+
+[BOLD]By properly normalizing[/BOLD], I can create a more robust and maintainable system. For instance, when designing a student management system, I would separate student information, course details, and enrollment records into different tables to avoid duplication.
+
+[TAB]This approach also makes it easier to write efficient SQL queries and implement features like data analytics or reporting in the future.`;
+
+                insightTextarea.value = `[H2]Personal Reflection[H2]
+I found the concept of third normal form (3NF) challenging at first because it requires careful analysis of functional dependencies. However, after working through examples, I realized it's about eliminating transitive dependencies where non-key attributes depend on other non-key attributes.
+
+[NEWLINE]
+[QUOTE]The most challenging part was identifying transitive dependencies in complex table structures[/QUOTE]
+
+This week taught me that I learn best through practical examples rather than just theoretical explanations. I need to spend more time creating sample databases to reinforce these concepts. I also realized that collaborating with peers on database design exercises helped me understand different perspectives on normalization.
+
+[HR]
+[H3]Areas for Improvement[H3]
+I need to improve my ability to identify normalization issues in existing database designs. Moving forward, I will practice by analyzing real-world database schemas and proposing normalization improvements.`;
+                
+                updateWordCounts();
+                generatePreview();
+                showStatus('Sample content loaded successfully', 'success');
+            }
+        }
+        
+        // Function to strip HTML tags for PDF content
+        function stripHTML(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+        
+        // Function to generate PDF
+        async function generatePDF() {
+            const totalWords = updateWordCounts();
             
+            // Validation
             if (totalWords === 0) {
-                alert('Cannot export an empty report. Please add content to at least one section.');
+                showStatus('Cannot export an empty report. Please add content to at least one section.', 'error');
                 return;
             }
             
             if (totalWords < 300) {
-                if (!confirm(`Your report has only ${totalWords} words, but 300 words are required. Do you still want to export?`)) {
-                    return;
-                }
+                modalMessage.innerHTML = `Your report has only <strong>${totalWords} words</strong>, but 300 words are required.<br><br>Do you still want to export?`;
+                confirmationModal.style.display = 'flex';
+                return;
             } else if (totalWords > 400) {
-                if (!confirm(`Your report has ${totalWords} words, which exceeds the 400 word limit. Do you still want to export?`)) {
-                    return;
-                }
+                modalMessage.innerHTML = `Your report has <strong>${totalWords} words</strong>, which exceeds the 400 word limit.<br><br>Do you still want to export?`;
+                confirmationModal.style.display = 'flex';
+                return;
+            } else {
+                modalMessage.innerHTML = `Your report has <strong>${totalWords} words</strong>, which is within the required range.<br><br>Ready to export?`;
+                confirmationModal.style.display = 'flex';
             }
+        }
+        
+        // Function to actually create the PDF
+        async function createPDF() {
+            loadingIndicator.style.display = 'block';
+            confirmationModal.style.display = 'none';
             
-            alert('PDF export functionality would normally generate a downloadable PDF file.\n\nFor now, you can:\n1. Copy the preview content\n2. Paste into a word processor\n3. Format with Times New Roman, size 12, justified alignment\n4. Save as PDF\n\nIn a full implementation, this would use a PDF generation library like jsPDF or html2pdf.');
+            try {
+                // Create a new jsPDF instance
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // Set font to Times New Roman
+                pdf.setFont("Times", "normal");
+                
+                // Add title
+                pdf.setFontSize(16);
+                pdf.text("LEAPP Reflection Report", 105, 20, { align: 'center' });
+                
+                pdf.setFontSize(12);
+                pdf.text("Weekly Reflection", 105, 30, { align: 'center' });
+                
+                // Draw a line
+                pdf.line(20, 35, 190, 35);
+                
+                // Prepare content for each section
+                const sections = [
+                    { title: "1. LEARNING", content: learningTextarea.value },
+                    { title: "2. EQUIVALENCE & AWARENESS", content: equivalenceTextarea.value },
+                    { title: "3. PRACTICE", content: practiceTextarea.value },
+                    { title: "4. PERSONAL INSIGHT", content: insightTextarea.value }
+                ];
+                
+                let yPosition = 45; // Starting Y position
+                const leftMargin = 20;
+                const rightMargin = 190;
+                const lineHeight = 7;
+                const pageHeight = 280;
+                
+                // Process each section
+                for (const section of sections) {
+                    // Add section title
+                    pdf.setFontSize(14);
+                    pdf.setFont("Times", "bold");
+                    pdf.text(section.title, leftMargin, yPosition);
+                    yPosition += lineHeight * 1.5;
+                    
+                    // Process section content
+                    pdf.setFontSize(12);
+                    pdf.setFont("Times", "normal");
+                    
+                    // Clean and format content
+                    let content = section.content;
+                    
+                    // Remove command tags for PDF
+                    content = content.replace(/\[H[1-6]\](.*?)(?=\[|$)/g, '$1\n');
+                    content = content.replace(/\[BOLD\](.*?)\[\/BOLD\]/g, '$1');
+                    content = content.replace(/\[ITALIC\](.*?)\[\/ITALIC\]/g, '$1');
+                    content = content.replace(/\[TAB\](.*?)(?=\[|$)/g, '    $1');
+                    content = content.replace(/\[OLIST\]"(.*?)"/g, function(match, listItems) {
+                        const items = listItems.split('", "');
+                        return items.map(item => '• ' + item.replace(/^[0-9•\-\.\s]+/, '').trim()).join('\n');
+                    });
+                    content = content.replace(/\[UNLISTED\]"(.*?)"/g, function(match, listItems) {
+                        const items = listItems.split('", "');
+                        return items.map(item => '• ' + item.replace(/^[0-9•\-\.\s]+/, '').trim()).join('\n');
+                    });
+                    content = content.replace(/\[NEWLINE\]/g, '\n');
+                    content = content.replace(/\[HR\]/g, '\n--------------------------------\n');
+                    content = content.replace(/\[QUOTE\](.*?)\[\/QUOTE\]/g, '"$1"');
+                    content = content.replace(/\[LINK\](.*?)\[\/LINK\]/g, '$1');
+                    
+                    // Split content into lines
+                    const lines = pdf.splitTextToSize(content, rightMargin - leftMargin);
+                    
+                    // Add each line to PDF
+                    for (let i = 0; i < lines.length; i++) {
+                        // Check if we need a new page
+                        if (yPosition > pageHeight) {
+                            pdf.addPage();
+                            yPosition = 20;
+                        }
+                        
+                        pdf.text(lines[i], leftMargin, yPosition);
+                        yPosition += lineHeight;
+                    }
+                    
+                    // Add space between sections
+                    yPosition += lineHeight;
+                    
+                    // Check if we need a new page before next section
+                    if (yPosition > pageHeight - 30) {
+                        pdf.addPage();
+                        yPosition = 20;
+                    }
+                }
+                
+                // Add footer with page numbers
+                const pageCount = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(10);
+                    pdf.text(`Page ${i} of ${pageCount}`, 105, 287, { align: 'center' });
+                    pdf.text("LEAPP Reflection Report", 20, 287);
+                    pdf.text(new Date().toLocaleDateString(), 190, 287, { align: 'right' });
+                }
+                
+                // Save the PDF
+                const fileName = `LEAPP_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+                pdf.save(fileName);
+                
+                loadingIndicator.style.display = 'none';
+                showStatus(`PDF "${fileName}" generated successfully!`, 'success');
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                loadingIndicator.style.display = 'none';
+                showStatus('Error generating PDF. Please try again.', 'error');
+            }
         }
         
         // Add event listeners
-        previewBtn.addEventListener('click', generatePreview);
+        previewBtn.addEventListener('click', () => {
+            generatePreview();
+            showStatus('Preview updated successfully', 'success');
+        });
+        
         clearBtn.addEventListener('click', clearAllFields);
-        exportBtn.addEventListener('click', exportAsPDF);
+        sampleBtn.addEventListener('click', loadSampleContent);
+        exportBtn.addEventListener('click', generatePDF);
+        
+        // Modal event listeners
+        modalCancel.addEventListener('click', () => {
+            confirmationModal.style.display = 'none';
+        });
+        
+        modalConfirm.addEventListener('click', createPDF);
+        
+        // Close modal when clicking outside
+        confirmationModal.addEventListener('click', (e) => {
+            if (e.target === confirmationModal) {
+                confirmationModal.style.display = 'none';
+            }
+        });
         
         // Update word counts as user types
         learningTextarea.addEventListener('input', updateWordCounts);
@@ -604,37 +990,22 @@
         practiceTextarea.addEventListener('input', updateWordCounts);
         insightTextarea.addEventListener('input', updateWordCounts);
         
-        // Initialize with example content
-        function initializeExample() {
-            learningTextarea.value = `[H1]What I Learned This Week[H1]
-This week, I learned about database normalization and its importance in reducing data redundancy. The process involves organizing data in a database to minimize duplication and ensure data integrity. 
-
-[TAB]I also explored different normal forms (1NF, 2NF, 3NF) and understood how each form addresses specific types of data anomalies.`;
-
-            equivalenceTextarea.value = `[H2]Real-World Applications[H2]
-Database normalization is widely used in enterprise systems. For example, e-commerce platforms use normalized databases to manage customer orders, product inventory, and user profiles efficiently.
-
-[OLIST]"Large-scale systems like banking", "Social media platforms", "Inventory management systems"`;
-
-            practiceTextarea.value = `[H2]Practical Application[H2]
-In my upcoming project, I can apply normalization principles when designing the database schema. This will help ensure that:
-
-[UNLISTED]"Data is consistent across tables", "Updates are easier to manage", "The database performs efficiently"
-
-[BOLD]By properly normalizing[/BOLD], I can create a more robust and maintainable system.`;
-
-            insightTextarea.value = `[H2]Personal Reflection[H2]
-I found the concept of third normal form (3NF) challenging at first because it requires careful analysis of functional dependencies. However, after working through examples, I realized it's about eliminating transitive dependencies.
-
-[NEWLINE]
-This week taught me that I learn best through practical examples rather than just theoretical explanations. I need to spend more time creating sample databases to reinforce these concepts.`;
-            
-            updateWordCounts();
-            generatePreview();
+        // Auto-update preview when user stops typing (debounced)
+        let typingTimer;
+        function doneTyping() {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(generatePreview, 1000);
         }
         
-        // Initialize with example content
-        initializeExample();
+        learningTextarea.addEventListener('input', doneTyping);
+        equivalenceTextarea.addEventListener('input', doneTyping);
+        practiceTextarea.addEventListener('input', doneTyping);
+        insightTextarea.addEventListener('input', doneTyping);
+        
+        // Initialize with sample content
+        window.addEventListener('load', () => {
+            loadSampleContent();
+        });
     </script>
 </body>
 </html>
