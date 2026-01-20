@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEAPP Reflection Report Builder</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -22,7 +21,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background-color: white;
             border-radius: 10px;
@@ -65,8 +64,8 @@
         }
         
         .preview-section {
-            flex: 1;
-            min-width: 300px;
+            flex: 1.5;
+            min-width: 400px;
             border-left: 1px solid #eee;
         }
         
@@ -100,6 +99,21 @@
             margin-bottom: 8px;
             font-weight: 600;
             color: #2c3e50;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
         
         textarea {
@@ -144,12 +158,19 @@
             font-size: 0.95rem;
         }
         
+        .student-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
         .preview-container {
             background-color: #f9f9f9;
             border: 1px solid #ddd;
             border-radius: 5px;
-            padding: 20px;
-            min-height: 600px;
+            padding: 25px;
+            min-height: 700px;
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
             text-align: justify;
@@ -165,6 +186,19 @@
             font-family: 'Times New Roman', Times, serif;
             margin-top: 15px;
             margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .preview-container h1 {
+            font-size: 18pt;
+        }
+        
+        .preview-container h2 {
+            font-size: 16pt;
+        }
+        
+        .preview-container h3 {
+            font-size: 14pt;
         }
         
         .preview-container ol, 
@@ -177,8 +211,10 @@
             margin-bottom: 5px;
         }
         
-        .preview-container .tab {
+        .preview-container .tabbed {
             margin-left: 40px;
+            text-indent: -20px;
+            padding-left: 40px;
         }
         
         .preview-container strong {
@@ -368,6 +404,10 @@
                 border-left: none;
                 border-top: 1px solid #eee;
             }
+            
+            .student-info {
+                grid-template-columns: 1fr;
+            }
         }
         
         .loading {
@@ -408,6 +448,43 @@
         .high {
             color: #f39c12;
         }
+        
+        .test-commands {
+            background-color: #fff8e1;
+            border: 1px solid #ffd54f;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .test-commands h4 {
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+        
+        .command-test {
+            font-family: monospace;
+            background-color: #fffde7;
+            padding: 8px;
+            border-radius: 3px;
+            margin: 5px 0;
+            border-left: 3px solid #ffb300;
+            font-size: 0.9rem;
+        }
+        
+        .pdf-issue-note {
+            background-color: #ffeaa7;
+            border: 1px solid #fdcb6e;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+        
+        .issue-fixed {
+            color: #27ae60;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -424,6 +501,33 @@
                 <div class="requirements-note">
                     <p><strong>Format Requirements:</strong> 300-400 words total, Times New Roman font, size 12, justified alignment. Submit as PDF.</p>
                     <p><strong>Academic Integrity:</strong> Plagiarism and unacknowledged AI-generated content are strictly prohibited.</p>
+                </div>
+                
+                <div class="pdf-issue-note">
+                    <p><strong>Issue Fixed:</strong> Previous PDF export had problems with commands appearing as text. Now commands are properly processed in PDF.</p>
+                    <p><strong>[TAB] Command:</strong> Correctly indents the entire paragraph/sentence that follows.</p>
+                </div>
+                
+                <div class="student-info">
+                    <div class="form-group">
+                        <label for="studentName">Student Name</label>
+                        <input type="text" id="studentName" placeholder="Enter your full name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="course">Course & Section</label>
+                        <input type="text" id="course" placeholder="e.g., BSCS 3">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" placeholder="e.g., Database Management">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="weekNumber">Week Number</label>
+                        <input type="text" id="weekNumber" placeholder="e.g., Week 5" value="Week 5">
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -467,7 +571,15 @@
                     <button id="clearBtn">Clear All</button>
                     <button id="exportBtn">Export as PDF</button>
                 </div>
-            </div>
+                
+                <div class="test-commands">
+                    <h4>Test Commands (Copy and paste to test):</h4>
+                    <div class="command-test">&lt;h3&gt;My Subheading&lt;/h3&gt;</div>
+                    <div class="command-test">[TAB]This paragraph is indented using the custom command.</div>
+                    <div class="command-test">This is &lt;b&gt;bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt;.</div>
+                    <div class="command-test">&lt;ul&gt;&lt;li&gt;List Item 1&lt;/li&gt;&lt;li&gt;List Item 2&lt;/li&gt;&lt;/ul&gt;</div>
+                </div>
+
             
             <div class="preview-section">
                 <h2>Live Preview</h2>
@@ -475,63 +587,56 @@
                     <p style="color: #999; text-align: center; margin-top: 50px;">Your formatted report will appear here</p>
                 </div>
             </div>
-            
-            <div class="commands-section">
+                        <div class="commands-section">
                 <h2>Formatting Commands</h2>
-                <p>Use these commands in your text to format your report. They will be converted to proper formatting in the preview and exported document.</p>
+                <p>You can now use standard HTML tags for formatting! We also kept the special <strong>[TAB]</strong> command for indentation.</p>
                 
                 <div class="commands-grid">
                     <div class="command-item">
                         <h3>Headers</h3>
-                        <div class="command-syntax">[H1]Your Header Text</div>
-                        <div class="command-example">Creates a main header (h1)</div>
+                        <div class="command-syntax">&lt;h1&gt;Main Title&lt;/h1&gt;</div>
+                        <div class="command-example">Creates a large header</div>
                         
-                        <div class="command-syntax">[H2]Sub Header</div>
-                        <div class="command-example">Creates a sub header (h2)</div>
-                        
-                        <div class="command-syntax">[H3]... [H4]... [H5]... [H6]...</div>
-                        <div class="command-example">Creates headers of different levels</div>
+                        <div class="command-syntax">&lt;h3&gt;Sub Header&lt;/h3&gt;</div>
+                        <div class="command-example">Creates a sub header</div>
                     </div>
                     
                     <div class="command-item">
-                        <h3>Text Formatting</h3>
-                        <div class="command-syntax">[BOLD]Your Text[/BOLD]</div>
-                        <div class="command-example">Makes text <strong>bold</strong></div>
+                        <h3>Text Emphasis</h3>
+                        <div class="command-syntax">&lt;b&gt;Bold Text&lt;/b&gt;</div>
+                        <div class="command-example">Makes text <b>bold</b></div>
                         
-                        <div class="command-syntax">[ITALIC]Your Text[/ITALIC]</div>
-                        <div class="command-example">Makes text <em>italic</em></div>
+                        <div class="command-syntax">&lt;i&gt;Italic Text&lt;/i&gt;</div>
+                        <div class="command-example">Makes text <i>italic</i></div>
                         
-                        <div class="command-syntax">[TAB]Your indented text</div>
-                        <div class="command-example">Indents the text that follows</div>
-                        
-                        <div class="command-syntax">[NEWLINE]</div>
-                        <div class="command-example">Adds a line break</div>
+                        <div class="command-syntax">&lt;u&gt;Underline&lt;/u&gt;</div>
+                        <div class="command-example">Makes text <u>underlined</u></div>
                     </div>
                     
                     <div class="command-item">
                         <h3>Lists</h3>
-                        <div class="command-syntax">[OLIST]"Item 1", "Item 2", "Item 3"</div>
-                        <div class="command-example">Creates a numbered list</div>
-                        
-                        <div class="command-syntax">[UNLISTED]"Item A", "Item B", "Item C"</div>
+                        <div class="command-syntax">&lt;ul&gt;&lt;li&gt;Item&lt;/li&gt;&lt;/ul&gt;</div>
                         <div class="command-example">Creates a bulleted list</div>
                         
-                        <div class="command-syntax">[OLIST]"1. First", "- Second", "• Third"</div>
-                        <div class="command-example">Supports different bullet formats</div>
+                        <div class="command-syntax">&lt;ol&gt;&lt;li&gt;Item&lt;/li&gt;&lt;/ol&gt;</div>
+                        <div class="command-example">Creates a numbered list</div>
                     </div>
                     
                     <div class="command-item">
-                        <h3>Special Formatting</h3>
-                        <div class="command-syntax">[HR]</div>
-                        <div class="command-example">Adds a horizontal line</div>
+                        <h3>Special & Custom</h3>
+                        <div class="command-syntax" style="background-color: #e8f4fc; border-color: #3498db;">[TAB]</div>
+                        <div class="command-example"><strong>Custom:</strong> Indents the following text</div>
                         
-                        <div class="command-syntax">[QUOTE]Your quote here[/QUOTE]</div>
-                        <div class="command-example">Formats text as a blockquote</div>
+                        <div class="command-syntax">&lt;br&gt;</div>
+                        <div class="command-example">Force a line break</div>
                         
-                        <div class="command-syntax">[LINK]https://example.com[/LINK]</div>
-                        <div class="command-example">Creates a clickable link</div>
+                        <div class="command-syntax">&lt;hr&gt;</div>
+                        <div class="command-example">Horizontal line separator</div>
                     </div>
                 </div>
+            </div>
+
+           
             </div>
         </div>
         
@@ -552,11 +657,15 @@
         </div>
     </div>
 
-    <script>
+       <script>
         // Initialize jsPDF
         const { jsPDF } = window.jspdf;
         
         // Get DOM elements
+        const studentNameInput = document.getElementById('studentName');
+        const courseInput = document.getElementById('course');
+        const subjectInput = document.getElementById('subject');
+        const weekNumberInput = document.getElementById('weekNumber');
         const learningTextarea = document.getElementById('learning');
         const equivalenceTextarea = document.getElementById('equivalence');
         const practiceTextarea = document.getElementById('practice');
@@ -584,8 +693,10 @@
         
         // Function to count words in a string
         function countWords(text) {
-            if (!text.trim()) return 0;
-            return text.trim().split(/\s+/).length;
+            if (!text || text.trim() === '') return 0;
+            // Remove HTML tags for accurate word count
+            const cleanText = text.replace(/<[^>]*>/g, ' ');
+            return cleanText.trim().split(/\s+/).length;
         }
         
         // Function to update word counts
@@ -631,370 +742,268 @@
         
         // Function to parse and convert commands to HTML
         function parseCommands(text) {
-            if (!text) return '';
+            if (!text || text.trim() === '') return '';
             
             let result = text;
             
-            // Replace headers
-            result = result.replace(/\[H1\](.*?)(?=\[|$)/g, '<h1>$1</h1>');
-            result = result.replace(/\[H2\](.*?)(?=\[|$)/g, '<h2>$1</h2>');
-            result = result.replace(/\[H3\](.*?)(?=\[|$)/g, '<h3>$1</h3>');
-            result = result.replace(/\[H4\](.*?)(?=\[|$)/g, '<h4>$1</h4>');
-            result = result.replace(/\[H5\](.*?)(?=\[|$)/g, '<h5>$1</h5>');
-            result = result.replace(/\[H6\](.*?)(?=\[|$)/g, '<h6>$1</h6>');
-            
-            // Replace bold and italic
-            result = result.replace(/\[BOLD\](.*?)\[\/BOLD\]/g, '<strong>$1</strong>');
-            result = result.replace(/\[ITALIC\](.*?)\[\/ITALIC\]/g, '<em>$1</em>');
-            
-            // Replace tab
-            result = result.replace(/\[TAB\](.*?)(?=\[|$)/g, '<div class="tab">$1</div>');
-            
-            // Replace ordered lists
-            result = result.replace(/\[OLIST\]"(.*?)"/g, function(match, listItems) {
-                const items = listItems.split('", "');
-                let listHTML = '<ol>';
-                items.forEach(item => {
-                    // Clean up item formatting
-                    let cleanItem = item.replace(/^[0-9•\-\.\s]+/, '').trim();
-                    if (cleanItem === '') cleanItem = item.trim();
-                    listHTML += `<li>${cleanItem}</li>`;
-                });
-                listHTML += '</ol>';
-                return listHTML;
-            });
-            
-            // Replace unordered lists
-            result = result.replace(/\[UNLISTED\]"(.*?)"/g, function(match, listItems) {
-                const items = listItems.split('", "');
-                let listHTML = '<ul>';
-                items.forEach(item => {
-                    // Clean up item formatting
-                    let cleanItem = item.replace(/^[0-9•\-\.\s]+/, '').trim();
-                    if (cleanItem === '') cleanItem = item.trim();
-                    listHTML += `<li>${cleanItem}</li>`;
-                });
-                listHTML += '</ul>';
-                return listHTML;
-            });
-            
-            // Replace newline
-            result = result.replace(/\[NEWLINE\]/g, '<br>');
-            
-            // Replace horizontal rule
-            result = result.replace(/\[HR\]/g, '<hr>');
-            
-            // Replace quote
-            result = result.replace(/\[QUOTE\](.*?)\[\/QUOTE\]/g, '<blockquote>$1</blockquote>');
-            
-            // Replace link
-            result = result.replace(/\[LINK\](.*?)\[\/LINK\]/g, '<a href="$1" target="_blank">$1</a>');
-            
-            // Replace line breaks for HTML
+            // 1. Handle the Custom [TAB] command
+            result = result.replace(/\[TAB\]/g, '<span style="display:inline-block; margin-left:40px;"></span>');
+
+            // 2. Handle Newlines (convert to <br>)
             result = result.replace(/\n/g, '<br>');
             
             return result;
         }
         
-        // Function to generate preview
+        // Function to clean text for PDF (remove HTML tags but keep structure)
+        function cleanTextForPDF(text) {
+            if (!text || text.trim() === '') return '';
+            
+            let result = text;
+            
+            // 1. Handle Custom [TAB] for PDF (Replace with 4 spaces)
+            result = result.replace(/\[TAB\]/g, '    ');
+            
+            // 2. Handle HTML Lists for PDF
+            result = result.replace(/<li[^>]*>/gi, '\n• ');
+            
+            // 3. Handle Block Breaks
+            result = result.replace(/<br\s*\/?>/gi, '\n');
+            result = result.replace(/<\/p>|<\/div>|<\/h[1-6]>/gi, '\n\n');
+            result = result.replace(/<\/ul>|<\/ol>|<\/li>/gi, ''); 
+            
+            // 4. Strip all remaining HTML tags
+            result = result.replace(/<[^>]*>/g, '');
+            
+            // 5. Decode basic HTML entities
+            result = result.replace(/&nbsp;/g, ' ');
+            result = result.replace(/&amp;/g, '&');
+            result = result.replace(/&lt;/g, '<');
+            result = result.replace(/&gt;/g, '>');
+            
+            return result.trim();
+        }
+
+        // Function to Generate Live Preview
         function generatePreview() {
-            const learningContent = parseCommands(learningTextarea.value);
-            const equivalenceContent = parseCommands(equivalenceTextarea.value);
-            const practiceContent = parseCommands(practiceTextarea.value);
-            const insightContent = parseCommands(insightTextarea.value);
+            const date = new Date().toLocaleDateString();
             
-            // Calculate total words
-            const totalWords = countWords(learningTextarea.value) + 
-                               countWords(equivalenceTextarea.value) + 
-                               countWords(practiceTextarea.value) + 
-                               countWords(insightTextarea.value);
-            
-            // Build preview HTML
-            let previewHTML = `
-                <div style="margin-bottom: 30px;">
-                    <h1 style="text-align: center; color: #2c3e50;">LEAPP Reflection Report</h1>
-                    <p style="text-align: center; color: #7f8c8d; margin-bottom: 20px;">Weekly Reflection | Total Words: ${totalWords}</p>
-                    <hr>
+            let html = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1>LEAPP Reflection Report</h1>
+                    <p style="margin-bottom: 5px;"><strong>Student Name:</strong> ${studentNameInput.value || '[Name]'}</p>
+                    <p style="margin-bottom: 5px;"><strong>Course:</strong> ${courseInput.value || '[Course]'}</p>
+                    <p style="margin-bottom: 5px;"><strong>Subject:</strong> ${subjectInput.value || '[Subject]'}</p>
+                    <p style="margin-bottom: 5px;"><strong>Week:</strong> ${weekNumberInput.value || '[Week]'}</p>
+                    <p style="margin-bottom: 20px;"><strong>Date:</strong> ${date}</p>
                 </div>
-                
-                <div style="margin-bottom: 30px;">
-                    <h2>1. LEARNING</h2>
-                    <div>${learningContent || '<p><em>No content entered for this section.</em></p>'}</div>
-                </div>
-                
-                <div style="margin-bottom: 30px;">
-                    <h2>2. EQUIVALENCE & AWARENESS</h2>
-                    <div>${equivalenceContent || '<p><em>No content entered for this section.</em></p>'}</div>
-                </div>
-                
-                <div style="margin-bottom: 30px;">
-                    <h2>3. PRACTICE</h2>
-                    <div>${practiceContent || '<p><em>No content entered for this section.</em></p>'}</div>
-                </div>
-                
-                <div style="margin-bottom: 30px;">
-                    <h2>4. PERSONAL INSIGHT</h2>
-                    <div>${insightContent || '<p><em>No content entered for this section.</em></p>'}</div>
-                </div>
+                <hr>
             `;
             
-            // Add word count status
-            if (totalWords === 0) {
-                previewHTML += `<p style="color: #999; font-style: italic; text-align: center;">Please add content to your report</p>`;
-            } else if (totalWords < 300) {
-                previewHTML += `<p style="color: #e74c3c; font-weight: bold;">Note: Your report has ${totalWords} words, but needs to be at least 300 words.</p>`;
-            } else if (totalWords > 400) {
-                previewHTML += `<p style="color: #f39c12; font-weight: bold;">Note: Your report has ${totalWords} words, but should not exceed 400 words.</p>`;
-            } else {
-                previewHTML += `<p style="color: #27ae60; font-weight: bold;">Good job! Your report has ${totalWords} words, which is within the required 300-400 word range.</p>`;
-            }
+            html += `<h3>1. LEARNING</h3>`;
+            html += `<div style="margin-bottom: 20px;">${parseCommands(learningTextarea.value) || 'No content...'}</div>`;
             
-            previewDiv.innerHTML = previewHTML;
+            html += `<h3>2. EQUIVALENCE & AWARENESS</h3>`;
+            html += `<div style="margin-bottom: 20px;">${parseCommands(equivalenceTextarea.value) || 'No content...'}</div>`;
+            
+            html += `<h3>3. PRACTICE</h3>`;
+            html += `<div style="margin-bottom: 20px;">${parseCommands(practiceTextarea.value) || 'No content...'}</div>`;
+            
+            html += `<h3>4. PERSONAL INSIGHT</h3>`;
+            html += `<div style="margin-bottom: 20px;">${parseCommands(insightTextarea.value) || 'No content...'}</div>`;
+            
+            previewDiv.innerHTML = html;
         }
-        
-        // Function to clear all fields
-        function clearAllFields() {
-            if (confirm('Are you sure you want to clear all sections? This cannot be undone.')) {
-                learningTextarea.value = '';
-                equivalenceTextarea.value = '';
-                practiceTextarea.value = '';
-                insightTextarea.value = '';
-                
-                updateWordCounts();
-                generatePreview();
-                showStatus('All fields cleared successfully', 'success');
-            }
-        }
-        
+
         // Function to load sample content
         function loadSampleContent() {
             if (confirm('This will replace your current content with sample data. Continue?')) {
-                learningTextarea.value = `[H1]What I Learned This Week[H1]
-This week, I learned about database normalization and its importance in reducing data redundancy. The process involves organizing data in a database to minimize duplication and ensure data integrity. 
+                studentNameInput.value = 'Juan Dela Cruz';
+                courseInput.value = 'BSCS 3';
+                subjectInput.value = 'Database Management';
+                weekNumberInput.value = 'Week 5';
+                
+                learningTextarea.value = `<h1>Database Normalization Concepts</h1>
+This week, I learned about database normalization and its importance in reducing data redundancy. The process involves organizing data in a database to minimize duplication.
 
-[TAB]I also explored different normal forms (1NF, 2NF, 3NF) and understood how each form addresses specific types of data anomalies. Understanding these concepts is crucial for designing efficient databases that can scale with application needs.
+[TAB]I also explored different normal forms (1NF, 2NF, 3NF) and understood how each form addresses specific types of data anomalies.
 
-[OLIST]"First Normal Form (1NF): Eliminates duplicate columns", "Second Normal Form (2NF): Removes partial dependencies", "Third Normal Form (3NF): Eliminates transitive dependencies"`;
+<h3>Key Takeaways:</h3>
+<ul>
+<li><b>First Normal Form (1NF):</b> Eliminates duplicate columns</li>
+<li><b>Second Normal Form (2NF):</b> Removes partial dependencies</li>
+<li><b>Third Normal Form (3NF):</b> Eliminates transitive dependencies</li>
+</ul>`;
 
-                equivalenceTextarea.value = `[H2]Real-World Applications[H2]
-Database normalization is widely used in enterprise systems. For example, e-commerce platforms use normalized databases to manage customer orders, product inventory, and user profiles efficiently. This ensures data consistency when thousands of transactions occur simultaneously.
+                equivalenceTextarea.value = `<h2>Real-World Applications</h2>
+Database normalization is widely used in enterprise systems. For example, e-commerce platforms use normalized databases to manage customer orders efficiently.
 
-[UNLISTED]"Large-scale systems like banking rely on normalized databases for transaction integrity", "Social media platforms use normalization to manage user relationships and content", "Inventory management systems require normalized data to track stock levels accurately"
+<ul>
+<li>Large-scale systems like banking rely on normalized databases</li>
+<li>Social media platforms use normalization for user relationships</li>
+</ul>
 
-[H3]Connection to Previous Lessons[H3]
-This lesson connects directly to our previous discussions on SQL and relational database design. The normalization principles apply directly to the table structures we designed last week, showing how theoretical concepts translate to practical implementation.`;
+<h3>Connection to Previous Lessons</h3>
+This lesson connects directly to our previous discussions on SQL. The principles apply directly to the table structures we designed last week.`;
 
-                practiceTextarea.value = `[H2]Practical Application[H2]
+                practiceTextarea.value = `<h2>Practical Application</h2>
 In my upcoming project, I can apply normalization principles when designing the database schema. This will help ensure that:
 
-[UNLISTED]"Data is consistent across tables", "Updates are easier to manage without affecting unrelated data", "The database performs efficiently even with large datasets"
+<ol>
+<li>Data is consistent across tables</li>
+<li>Updates are easier to manage</li>
+<li>The database performs efficiently</li>
+</ol>
 
-[BOLD]By properly normalizing[/BOLD], I can create a more robust and maintainable system. For instance, when designing a student management system, I would separate student information, course details, and enrollment records into different tables to avoid duplication.
+<b>By properly normalizing</b>, I can create a more robust system. 
 
 [TAB]This approach also makes it easier to write efficient SQL queries and implement features like data analytics or reporting in the future.`;
 
-                insightTextarea.value = `[H2]Personal Reflection[H2]
-I found the concept of third normal form (3NF) challenging at first because it requires careful analysis of functional dependencies. However, after working through examples, I realized it's about eliminating transitive dependencies where non-key attributes depend on other non-key attributes.
+                insightTextarea.value = `<h2>Personal Reflection</h2>
+I found the concept of <i>third normal form (3NF)</i> challenging at first because it requires careful analysis of functional dependencies. 
 
-[NEWLINE]
-[QUOTE]The most challenging part was identifying transitive dependencies in complex table structures[/QUOTE]
+<blockquote>"The most challenging part was identifying transitive dependencies."</blockquote>
 
-This week taught me that I learn best through practical examples rather than just theoretical explanations. I need to spend more time creating sample databases to reinforce these concepts. I also realized that collaborating with peers on database design exercises helped me understand different perspectives on normalization.
+This week taught me that I learn best through practical examples rather than just theoretical explanations.
 
-[HR]
-[H3]Areas for Improvement[H3]
-I need to improve my ability to identify normalization issues in existing database designs. Moving forward, I will practice by analyzing real-world database schemas and proposing normalization improvements.`;
+<hr>
+<h3>Areas for Improvement</h3>
+I need to improve my ability to identify normalization issues in existing database designs.`;
                 
                 updateWordCounts();
                 generatePreview();
                 showStatus('Sample content loaded successfully', 'success');
             }
         }
-        
-        // Function to strip HTML tags for PDF content
-        function stripHTML(html) {
-            const tmp = document.createElement('div');
-            tmp.innerHTML = html;
-            return tmp.textContent || tmp.innerText || '';
-        }
-        
-        // Function to generate PDF
-        async function generatePDF() {
-            const totalWords = updateWordCounts();
-            
-            // Validation
-            if (totalWords === 0) {
-                showStatus('Cannot export an empty report. Please add content to at least one section.', 'error');
-                return;
-            }
-            
-            if (totalWords < 300) {
-                modalMessage.innerHTML = `Your report has only <strong>${totalWords} words</strong>, but 300 words are required.<br><br>Do you still want to export?`;
-                confirmationModal.style.display = 'flex';
-                return;
-            } else if (totalWords > 400) {
-                modalMessage.innerHTML = `Your report has <strong>${totalWords} words</strong>, which exceeds the 400 word limit.<br><br>Do you still want to export?`;
-                confirmationModal.style.display = 'flex';
-                return;
-            } else {
-                modalMessage.innerHTML = `Your report has <strong>${totalWords} words</strong>, which is within the required range.<br><br>Ready to export?`;
-                confirmationModal.style.display = 'flex';
-            }
-        }
-        
-        // Function to actually create the PDF
-        async function createPDF() {
-            loadingIndicator.style.display = 'block';
-            confirmationModal.style.display = 'none';
-            
-            try {
-                // Create a new jsPDF instance
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                
-                // Set font to Times New Roman
-                pdf.setFont("Times", "normal");
-                
-                // Add title
-                pdf.setFontSize(16);
-                pdf.text("LEAPP Reflection Report", 105, 20, { align: 'center' });
-                
-                pdf.setFontSize(12);
-                pdf.text("Weekly Reflection", 105, 30, { align: 'center' });
-                
-                // Draw a line
-                pdf.line(20, 35, 190, 35);
-                
-                // Prepare content for each section
-                const sections = [
-                    { title: "1. LEARNING", content: learningTextarea.value },
-                    { title: "2. EQUIVALENCE & AWARENESS", content: equivalenceTextarea.value },
-                    { title: "3. PRACTICE", content: practiceTextarea.value },
-                    { title: "4. PERSONAL INSIGHT", content: insightTextarea.value }
-                ];
-                
-                let yPosition = 45; // Starting Y position
-                const leftMargin = 20;
-                const rightMargin = 190;
-                const lineHeight = 7;
-                const pageHeight = 280;
-                
-                // Process each section
-                for (const section of sections) {
-                    // Add section title
-                    pdf.setFontSize(14);
-                    pdf.setFont("Times", "bold");
-                    pdf.text(section.title, leftMargin, yPosition);
-                    yPosition += lineHeight * 1.5;
-                    
-                    // Process section content
-                    pdf.setFontSize(12);
-                    pdf.setFont("Times", "normal");
-                    
-                    // Clean and format content
-                    let content = section.content;
-                    
-                    // Remove command tags for PDF
-                    content = content.replace(/\[H[1-6]\](.*?)(?=\[|$)/g, '$1\n');
-                    content = content.replace(/\[BOLD\](.*?)\[\/BOLD\]/g, '$1');
-                    content = content.replace(/\[ITALIC\](.*?)\[\/ITALIC\]/g, '$1');
-                    content = content.replace(/\[TAB\](.*?)(?=\[|$)/g, '    $1');
-                    content = content.replace(/\[OLIST\]"(.*?)"/g, function(match, listItems) {
-                        const items = listItems.split('", "');
-                        return items.map(item => '• ' + item.replace(/^[0-9•\-\.\s]+/, '').trim()).join('\n');
-                    });
-                    content = content.replace(/\[UNLISTED\]"(.*?)"/g, function(match, listItems) {
-                        const items = listItems.split('", "');
-                        return items.map(item => '• ' + item.replace(/^[0-9•\-\.\s]+/, '').trim()).join('\n');
-                    });
-                    content = content.replace(/\[NEWLINE\]/g, '\n');
-                    content = content.replace(/\[HR\]/g, '\n--------------------------------\n');
-                    content = content.replace(/\[QUOTE\](.*?)\[\/QUOTE\]/g, '"$1"');
-                    content = content.replace(/\[LINK\](.*?)\[\/LINK\]/g, '$1');
-                    
-                    // Split content into lines
-                    const lines = pdf.splitTextToSize(content, rightMargin - leftMargin);
-                    
-                    // Add each line to PDF
-                    for (let i = 0; i < lines.length; i++) {
-                        // Check if we need a new page
-                        if (yPosition > pageHeight) {
-                            pdf.addPage();
-                            yPosition = 20;
-                        }
-                        
-                        pdf.text(lines[i], leftMargin, yPosition);
-                        yPosition += lineHeight;
-                    }
-                    
-                    // Add space between sections
-                    yPosition += lineHeight;
-                    
-                    // Check if we need a new page before next section
-                    if (yPosition > pageHeight - 30) {
-                        pdf.addPage();
-                        yPosition = 20;
-                    }
-                }
-                
-                // Add footer with page numbers
-                const pageCount = pdf.internal.getNumberOfPages();
-                for (let i = 1; i <= pageCount; i++) {
-                    pdf.setPage(i);
-                    pdf.setFontSize(10);
-                    pdf.text(`Page ${i} of ${pageCount}`, 105, 287, { align: 'center' });
-                    pdf.text("LEAPP Reflection Report", 20, 287);
-                    pdf.text(new Date().toLocaleDateString(), 190, 287, { align: 'right' });
-                }
-                
-                // Save the PDF
-                const fileName = `LEAPP_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
-                pdf.save(fileName);
-                
-                loadingIndicator.style.display = 'none';
-                showStatus(`PDF "${fileName}" generated successfully!`, 'success');
-                
-            } catch (error) {
-                console.error('PDF generation error:', error);
-                loadingIndicator.style.display = 'none';
-                showStatus('Error generating PDF. Please try again.', 'error');
-            }
-        }
-        
-        // Add event listeners
+
+        // Event Listeners
         previewBtn.addEventListener('click', () => {
+            updateWordCounts();
             generatePreview();
-            showStatus('Preview updated successfully', 'success');
+            showStatus('Preview updated', 'success');
         });
         
-        clearBtn.addEventListener('click', clearAllFields);
+        clearBtn.addEventListener('click', () => {
+            if(confirm('Are you sure you want to clear all fields?')) {
+                studentNameInput.value = '';
+                courseInput.value = '';
+                subjectInput.value = '';
+                weekNumberInput.value = '';
+                learningTextarea.value = '';
+                equivalenceTextarea.value = '';
+                practiceTextarea.value = '';
+                insightTextarea.value = '';
+                updateWordCounts();
+                generatePreview();
+                showStatus('All fields cleared', 'warning');
+            }
+        });
+
         sampleBtn.addEventListener('click', loadSampleContent);
-        exportBtn.addEventListener('click', generatePDF);
-        
-        // Modal event listeners
+
+        // Export PDF Logic
+        exportBtn.addEventListener('click', () => {
+            const totalWords = updateWordCounts();
+            if (totalWords < 300) {
+                if(!confirm('Your word count is below the recommended 300 words. Do you still want to export?')) {
+                    return;
+                }
+            }
+            confirmationModal.style.display = 'flex';
+        });
+
         modalCancel.addEventListener('click', () => {
             confirmationModal.style.display = 'none';
         });
-        
-        modalConfirm.addEventListener('click', createPDF);
-        
-        // Close modal when clicking outside
-        confirmationModal.addEventListener('click', (e) => {
-            if (e.target === confirmationModal) {
-                confirmationModal.style.display = 'none';
-            }
+
+        modalConfirm.addEventListener('click', () => {
+            confirmationModal.style.display = 'none';
+            loadingIndicator.style.display = 'block';
+            
+            // Small timeout to allow UI to update
+            setTimeout(() => {
+                try {
+                    const doc = new jsPDF();
+                    const date = new Date().toLocaleDateString();
+                    
+                    // Set font
+                    doc.setFont("times", "normal");
+                    doc.setFontSize(12);
+                    
+                    let yPos = 20;
+                    const margin = 20;
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const contentWidth = pageWidth - (margin * 2);
+                    
+                    // Header
+                    doc.setFont("times", "bold");
+                    doc.setFontSize(14);
+                    doc.text("LEAPP Reflection Report", pageWidth / 2, yPos, { align: "center" });
+                    yPos += 15;
+                    
+                    // Student Info
+                    doc.setFontSize(12);
+                    doc.text(`Student Name: ${studentNameInput.value}`, margin, yPos);
+                    yPos += 7;
+                    doc.text(`Course: ${courseInput.value}`, margin, yPos);
+                    yPos += 7;
+                    doc.text(`Subject: ${subjectInput.value}`, margin, yPos);
+                    yPos += 7;
+                    doc.text(`Week: ${weekNumberInput.value}`, margin, yPos);
+                    doc.text(`Date: ${date}`, pageWidth - margin - 30, yPos);
+                    yPos += 15;
+                    
+                    // Helper to add sections
+                    const addSection = (title, content) => {
+                        // Check for page break
+                        if (yPos > 250) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        doc.setFont("times", "bold");
+                        doc.text(title, margin, yPos);
+                        yPos += 7;
+                        
+                        doc.setFont("times", "normal");
+                        const cleanContent = cleanTextForPDF(content);
+                        const splitText = doc.splitTextToSize(cleanContent, contentWidth);
+                        
+                        // Check if content fits
+                        if (yPos + (splitText.length * 5) > 280) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        
+                        doc.text(splitText, margin, yPos);
+                        yPos += (splitText.length * 5) + 10;
+                    };
+                    
+                    addSection("1. LEARNING", learningTextarea.value);
+                    addSection("2. EQUIVALENCE & AWARENESS", equivalenceTextarea.value);
+                    addSection("3. PRACTICE", practiceTextarea.value);
+                    addSection("4. PERSONAL INSIGHT", insightTextarea.value);
+                    
+                    // Save
+                    const filename = `LEAPP_Report_${studentNameInput.value.replace(/\s+/g, '_')}_${weekNumberInput.value.replace(/\s+/g, '_')}.pdf`;
+                    doc.save(filename);
+                    
+                    loadingIndicator.style.display = 'none';
+                    showStatus('PDF exported successfully!', 'success');
+                } catch (error) {
+                    console.error(error);
+                    loadingIndicator.style.display = 'none';
+                    showStatus('Error generating PDF. Check console.', 'error');
+                }
+            }, 100);
         });
-        
-        // Update word counts as user types
-        learningTextarea.addEventListener('input', updateWordCounts);
-        equivalenceTextarea.addEventListener('input', updateWordCounts);
-        practiceTextarea.addEventListener('input', updateWordCounts);
-        insightTextarea.addEventListener('input', updateWordCounts);
-        
-        // Auto-update preview when user stops typing (debounced)
+
+        // Auto-update preview logic
         let typingTimer;
         function doneTyping() {
             clearTimeout(typingTimer);
             typingTimer = setTimeout(generatePreview, 1000);
+            updateWordCounts();
         }
         
         learningTextarea.addEventListener('input', doneTyping);
@@ -1002,10 +1011,13 @@ I need to improve my ability to identify normalization issues in existing databa
         practiceTextarea.addEventListener('input', doneTyping);
         insightTextarea.addEventListener('input', doneTyping);
         
-        // Initialize with sample content
+        // Initialize with sample content on load
         window.addEventListener('load', () => {
-            loadSampleContent();
+            // Optional: uncomment to load sample automatically
+            // loadSampleContent(); 
+            updateWordCounts();
         });
     </script>
+
 </body>
 </html>
