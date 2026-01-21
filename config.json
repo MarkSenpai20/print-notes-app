@@ -1,17 +1,39 @@
 {
   "links": [
     {
-         "name": "LEAPP REPORT TEMPLATE",
-         "url": "https://marksenpai20.github.io/print-notes-app/leapReport.html",
-         "icon": "fas fa-file-code"
+      "name": "LEAPP REPORT TEMPLATE",
+      "url": "https://marksenpai20.github.io/print-notes-app/leapReport.html",
+      "icon": "fas fa-file-code"
     },
     {
       "name": "Note Cards 2x2 printable",
       "url": "https://marksenpai20.github.io/print-notes-app/NoteCards.html",
       "icon": "fas fa-file-code"
+    },
+    {
+      "name": "GitPocket RealTime",
+      "url": "https://marksenpai20.github.io/GitPocket",
+      "icon": "fas fa-link"
+    },
+    {
+      "name": "Exam Crammer",
+      "url": "https://crammer-ten.vercel.app",
+      "icon": "fas fa-link"
+    },
+    {
+      "name": "Armalite Studio (Roblox Scripting Injection Service)",
+      "url": "https://marksenpai20.github.io/aArmalite-Studios",
+      "icon": "fas fa-globe"
+    },
+    {
+      "name": "Vantal Sharing Files",
+      "url": "https://vantalshare.vercel.app",
+      "icon": "fas fa-globe"
+    },
+    {
+      "name": "Vantal App Store",
+      "url": "https://marksenpai20.github.io/vantalappstore",
+      "icon": "fas fa-globe"
     }
   ]
-
 }
-
-
