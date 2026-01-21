@@ -5,5 +5,11 @@
          "url": "leapReport.html",
          "icon": "fas fa-file-code"
     }
+    {
+      "name": "Note Cards 2x2 printable"
+      "url": "NoteCards.html"
+      "icon": "fas fa-file-code"
+    }
   ]
+
 }
