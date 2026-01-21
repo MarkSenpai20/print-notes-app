@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vantal Links - MJ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c2461 0%, #1e3799 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(90deg, #0c2461 0%, #1e3799 100%);
+            color: white;
+            padding: 25px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 28px;
+            color: #1e3799;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand-text h1 {
+            font-size: 32px;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .brand-text p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .admin-link {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .admin-link:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .header-decoration {
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 180px;
+            height: 180px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .header-decoration::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 140px;
+            height: 140px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+
+        .content-wrapper {
+            display: flex;
+            min-height: 700px;
+        }
+
+        /* Sidebar with Table of Contents */
+        .sidebar {
+            width: 320px;
+            background-color: #f8f9fa;
+            border-right: 1px solid #eaeaea;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: #0c2461;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #1e3799;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            font-size: 20px;
+        }
+
+        .toc-list {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .toc-item {
+            margin-bottom: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #e0e0e0;
+        }
+
+        .toc-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .toc-item.active {
+            background-color: #e8f0ff;
+            border-color: #1e3799;
+        }
+
+        .toc-link {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            text-decoration: none;
+            color: #333;
+            gap: 12px;
+        }
+
+        .toc-link:hover {
+            color: #1e3799;
+        }
+
+        .link-icon {
+            width: 36px;
+            height: 36px;
+            background-color: #e8f0ff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e3799;
+            font-size: 16px;
+        }
+
+        .toc-item.active .link-icon {
+            background-color: #1e3799;
+            color: white;
+        }
+
+        .link-info {
+            flex: 1;
+        }
+
+        .link-name {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+
+        .link-url {
+            font-size: 13px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .instructions {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #0c2461;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instructions p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .instructions code {
+            background-color: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        /* Main content area */
+        .main-content {
+            flex: 1;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .embed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .embed-title h2 {
+            font-size: 24px;
+            color: #0c2461;
+            margin-bottom: 5px;
+        }
+
+        .embed-title p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .redirect-btn {
+            background-color: #1e3799;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .redirect-btn:hover {
+            background-color: #0c2461;
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(28, 55, 153, 0.3);
+        }
+
+        .embed-container {
+            flex: 1;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+            background-color: #f9f9f9;
+            position: relative;
+        }
+
+        .iframe-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .iframe-placeholder i {
+            font-size: 70px;
+            color: #d1d5db;
+            margin-bottom: 20px;
+        }
+
+        .iframe-placeholder h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4b5563;
+        }
+
+        .iframe-placeholder p {
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+        }
+
+        .stat-box {
+            flex: 1;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #e8f0ff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e3799;
+            font-size: 22px;
+        }
+
+        .stat-info h4 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0c2461;
+        }
+
+        footer {
+            background-color: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #eaeaea;
+        }
+
+        .footer-brand {
+            font-weight: 700;
+            color: #1e3799;
+        }
+
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #eaeaea;
+            }
+            
+            .embed-container {
+                min-height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .embed-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .stats {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <div class="brand-logo">MJ</div>
+                <div class="brand-text">
+                    <h1>Vantal Links</h1>
+                    <p>Your personalized link aggregator</p>
+                </div>
+            </div>
+            <a href="https://github.com" class="admin-link" target="_blank">
+                <i class="fas fa-cog"></i> Admin (GitHub)
+            </a>
+            <div class="header-decoration"></div>
+        </header>
+
+        <div class="content-wrapper">
+            <div class="sidebar">
+                <h2 class="section-title"><i class="fas fa-list"></i> Table of Contents</h2>
+                <ul class="toc-list" id="tocList">
+                    <!-- Table of contents will be generated here from config.json -->
+                </ul>
+
+                <div class="instructions">
+                    <h3><i class="fas fa-info-circle"></i> How to Add Links</h3>
+                    <p>To add new links to this dashboard:</p>
+                    <ol style="margin-left: 20px; margin-bottom: 15px; font-size: 14px; color: #666;">
+                        <li style="margin-bottom: 8px;">Clone the repository to your local machine</li>
+                        <li style="margin-bottom: 8px;">Run the Python configuration wizard: <code>python config.py</code></li>
+                        <li style="margin-bottom: 8px;">Follow the prompts to add new links</li>
+                        <li>The script will automatically update the config.json file</li>
+                    </ol>
+                    <p>Need Font Awesome icons? Visit: <a href="https://fontawesome.com/icons" target="_blank">fontawesome.com/icons</a></p>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="embed-header">
+                    <div class="embed-title">
+                        <h2 id="currentTitle">Select a link from the table of contents</h2>
+                        <p id="currentUrl">No link selected</p>
+                    </div>
+                    <a href="#" target="_blank" class="redirect-btn" id="redirectBtn">
+                        <i class="fas fa-external-link-alt"></i> Open in New Tab
+                    </a>
+                </div>
+
+                <div class="embed-container">
+                    <div class="iframe-placeholder" id="iframePlaceholder">
+                        <i class="fas fa-hand-pointer"></i>
+                        <h3>No Content Selected</h3>
+                        <p>Choose a link from the table of contents on the left to display its content here. You can embed both local HTML files and hosted web pages.</p>
+                    </div>
+                    <iframe id="contentFrame" style="display: none;"></iframe>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Total Links</h4>
+                            <p id="totalLinks">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Active Embed</h4>
+                            <p id="activeEmbed">None</p>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Last Updated</h4>
+                            <p id="lastUpdated">Just now</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; <span id="currentYear"></span> Vantal Links | Branded by <span class="footer-brand">MJ</span> | All embedded content belongs to their respective owners</p>
+        </footer>
+    </div>
+
+    <script>
+        // Load configuration from config.json file
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // Load configuration from config.json
+            loadConfig();
+        });
+
+        // Load configuration from config.json
+        async function loadConfig() {
+            try {
+                const response = await fetch('config.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const config = await response.json();
+                updateUI(config);
+                updateStats(config);
+            } catch (error) {
+                console.error('Error loading config.json:', error);
+                // Show error in UI
+                const tocList = document.getElementById('tocList');
+                tocList.innerHTML = `
+                    <li style="color: #d32f2f; padding: 20px; text-align: center; background-color: #ffebee; border-radius: 10px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                        <p>Error loading config.json</p>
+                        <p style="font-size: 12px;">${error.message}</p>
+                    </li>
+                `;
+            }
+        }
+
+        // Update the table of contents
+        function updateUI(config) {
+            // Update table of contents
+            const tocList = document.getElementById('tocList');
+            tocList.innerHTML = '';
+            
+            config.links.forEach((link, index) => {
+                const li = document.createElement('li');
+                li.className = 'toc-item';
+                if (index === 0) li.classList.add('active');
+                
+                li.innerHTML = `
+                    <a href="#" class="toc-link" data-index="${index}">
+                        <div class="link-icon">
+                            <i class="${link.icon || 'fas fa-link'}"></i>
+                        </div>
+                        <div class="link-info">
+                            <div class="link-name">${link.name}</div>
+                            <div class="link-url">${link.url}</div>
+                        </div>
+                    </a>
+                `;
+                
+                li.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Remove active class from all items
+                    document.querySelectorAll('.toc-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    // Load the selected link
+                    loadLink(link);
+                });
+                
+                tocList.appendChild(li);
+            });
+            
+            // Load the first link by default
+            if (config.links.length > 0) {
+                loadLink(config.links[0]);
+            }
+        }
+
+        // Load a link into the iframe
+        function loadLink(link) {
+            // Update title and URL display
+            document.getElementById('currentTitle').textContent = link.name;
+            document.getElementById('currentUrl').textContent = link.url;
+            document.getElementById('activeEmbed').textContent = link.name;
+            
+            // Update redirect button
+            const redirectBtn = document.getElementById('redirectBtn');
+            redirectBtn.href = link.url;
+            
+            // Update iframe
+            const iframe = document.getElementById('contentFrame');
+            const placeholder = document.getElementById('iframePlaceholder');
+            
+            // Check if it's a local file
+            if (link.url.startsWith('http')) {
+                iframe.src = link.url;
+            } else {
+                // For local files, we need to handle them differently
+                // In a real implementation, you might need to serve these files
+                iframe.src = `data:text/html;charset=utf-8,${encodeURIComponent('<h1>Local File: ' + link.url + '</h1><p>In a real implementation, this would load the local HTML file. For security reasons, browsers restrict loading local files directly in iframes.</p><p>To test with local files, you can run this app through a local web server.</p>')}`;
+            }
+            
+            // Show iframe and hide placeholder
+            iframe.style.display = 'block';
+            placeholder.style.display = 'none';
+            
+            // Update last updated time
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = 
+                `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        // Update statistics
+        function updateStats(config) {
+            document.getElementById('totalLinks').textContent = config.links.length;
+        }
+    </script>
+</body>
+</html>
