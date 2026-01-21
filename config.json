@@ -2,15 +2,16 @@
   "links": [
     {
          "name": "LEAPP REPORT TEMPLATE",
-         "url": "leapReport.html",
+         "url": "https://marksenpai20.github.io/print-notes-app/leapReport.html",
          "icon": "fas fa-file-code"
     },
     {
-      "name": "Note Cards 2x2 printable"
-      "url": "NoteCards.html"
+      "name": "Note Cards 2x2 printable",
+      "url": "https://marksenpai20.github.io/print-notes-app/NoteCards.html",
       "icon": "fas fa-file-code"
     }
   ]
 
 }
+
 
