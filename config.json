@@ -34,6 +34,11 @@
       "name": "Vantal App Store",
       "url": "https://marksenpai20.github.io/vantalappstore",
       "icon": "fas fa-globe"
+    },
+    {
+      "name": "Binary-Finger Memorizer",
+      "url": "https://marksenpai20.github.io/print-notes-app/binary-finger.html",
+      "icon": "fas fa-file-code"
     }
   ]
 }
